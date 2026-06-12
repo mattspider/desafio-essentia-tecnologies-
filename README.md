@@ -52,18 +52,46 @@ Com interfaces para services e repositories, injeção de dependências via TSyr
    cp .env.example backend/.env
    ```
 
-3. Instale as dependências do backend:
+3. **Suba os bancos de dados (Fase 1):**
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Aguarde os containers `techx-mysql` e `techx-mongo` ficarem healthy.
+
+4. Instale as dependências do backend e aplique migrations:
 
    ```bash
    cd backend
    npm install
+   npm run db:migrate:deploy
+   npm run db:generate
    ```
 
-4. Execute em modo desenvolvimento:
+5. Execute em modo desenvolvimento:
 
    ```bash
    npm run dev
    ```
+
+## Docker (MySQL + MongoDB)
+
+O arquivo [`docker-compose.yml`](docker-compose.yml) provisiona:
+
+| Serviço | Imagem | Porta | Credenciais |
+|---------|--------|-------|-------------|
+| MySQL | `mysql:8` | 3306 | user: `techx`, senha: `techx123`, db: `techx_todo` |
+| MongoDB | `mongo:7` | 27017 | sem auth (dev local) |
+
+Comandos úteis:
+
+```bash
+docker compose up -d      # iniciar bancos
+docker compose ps         # status
+docker compose down       # parar
+docker compose down -v    # parar e remover volumes
+```
 
 ## Scripts do backend
 
@@ -74,11 +102,15 @@ Com interfaces para services e repositories, injeção de dependências via TSyr
 | `npm run start` | Executa a build de produção |
 | `npm run lint` | Verifica código com ESLint |
 | `npm run format` | Formata código com Prettier |
+| `npm run db:generate` | Gera o Prisma Client |
+| `npm run db:migrate` | Cria/aplica migrations (dev) |
+| `npm run db:migrate:deploy` | Aplica migrations (prod/CI) |
+| `npm run db:studio` | Abre Prisma Studio |
 
 ## Status de implementação
 
 - [x] Fase 0 — Bootstrap do monorepo
-- [ ] Fase 1 — Infraestrutura (Docker, Prisma, Mongoose)
+- [x] Fase 1 — Infraestrutura (Docker, Prisma, Mongoose)
 - [ ] Fase 2 — Injeção de dependências (TSyringe)
 - [ ] Fase 3 — Autenticação JWT
 - [ ] Fase 4 — CRUD de tarefas + metadados MongoDB
