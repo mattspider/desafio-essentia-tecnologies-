@@ -21,14 +21,18 @@ Controller → Service → Repository
 
 Com interfaces para services e repositories, injeção de dependências via TSyringe e princípios SOLID.
 
+> Documentação detalhada das decisões arquiteturais: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## Estrutura do projeto
 
 ```
 .
-├── backend/          # API REST (Express + TypeScript)
-├── frontend/         # SPA Angular (em desenvolvimento)
-├── .env.example      # Variáveis de ambiente de referência
-└── docker-compose.yml # (Fase 1+) MySQL + MongoDB
+├── backend/              # API REST (Express + TypeScript)
+├── frontend/             # SPA Angular
+├── docs/
+│   └── ARCHITECTURE.md   # Decisões de arquitetura e SOLID
+├── .env.example          # Variáveis de ambiente de referência
+└── docker-compose.yml    # (Fase 1+) MySQL + MongoDB
 ```
 
 ## Pré-requisitos
@@ -83,7 +87,3 @@ Com interfaces para services e repositories, injeção de dependências via TSyr
 - [ ] Fase 7 — CI/CD (GitHub Actions + Vercel)
 - [ ] Fase 8–10 — Frontend Angular
 - [ ] Fase 11 — Documentação final
-
-## Licença
-
-Projeto desenvolvido para fins de avaliação técnica.
