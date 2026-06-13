@@ -1,8 +1,12 @@
 import { Router } from 'express';
+import { createAuthRouter } from './auth.routes';
 import { healthRouter } from './health.routes';
 
-const apiRouter = Router();
+export function createApiRouter(): Router {
+  const apiRouter = Router();
 
-apiRouter.use(healthRouter);
+  apiRouter.use(healthRouter);
+  apiRouter.use('/auth', createAuthRouter());
 
-export { apiRouter };
+  return apiRouter;
+}

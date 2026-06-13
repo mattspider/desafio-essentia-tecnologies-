@@ -3,7 +3,7 @@ import express, { Express } from 'express';
 import { env } from './config/env';
 import { errorHandler } from './middlewares/error-handler.middleware';
 import { notFoundHandler } from './middlewares/not-found.middleware';
-import { apiRouter } from './routes';
+import { createApiRouter } from './routes';
 
 export function createApp(): Express {
   const app = express();
@@ -16,7 +16,7 @@ export function createApp(): Express {
   );
   app.use(express.json());
 
-  app.use('/api', apiRouter);
+  app.use('/api', createApiRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);
