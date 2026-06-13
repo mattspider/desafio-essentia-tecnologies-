@@ -111,7 +111,7 @@ docker compose down -v    # parar e remover volumes
 
 - [x] Fase 0 — Bootstrap do monorepo
 - [x] Fase 1 — Infraestrutura (Docker, Prisma, Mongoose)
-- [ ] Fase 2 — Injeção de dependências (TSyringe)
+- [x] Fase 2 — Injeção de dependências (TSyringe + Express)
 - [ ] Fase 3 — Autenticação JWT
 - [ ] Fase 4 — CRUD de tarefas + metadados MongoDB
 - [ ] Fase 5 — Docker completo
