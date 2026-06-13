@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import dotenv from 'dotenv';
+import { loadEnv } from './config/load-env';
 
-dotenv.config();
+loadEnv();
 
 import { createApp } from './app';
 import { setupContainer } from './container';
