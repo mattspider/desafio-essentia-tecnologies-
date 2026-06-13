@@ -113,7 +113,7 @@ docker compose down -v    # parar e remover volumes
 - [x] Fase 1 — Infraestrutura (Docker, Prisma, Mongoose)
 - [x] Fase 2 — Injeção de dependências (TSyringe + Express)
 - [x] Fase 3 — Autenticação JWT
-- [ ] Fase 4 — CRUD de tarefas + metadados MongoDB
+- [x] Fase 4 — CRUD de tarefas + metadados MongoDB
 - [ ] Fase 5 — Docker completo
 - [ ] Fase 6 — Testes unitários
 - [ ] Fase 7 — CI/CD (GitHub Actions + Vercel)

@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe';
-import { AppError } from '../errors';
 import { TOKENS } from '../container/tokens';
-import { ITaskMetadataRepository } from '../repositories/interfaces/ITaskMetadataRepository';
-import { ITaskRepository } from '../repositories/interfaces/ITaskRepository';
+import { NotFoundError } from '../errors';
 import { CreateTaskData, Task, UpdateTaskData } from '../models/Task';
 import { TaskMetadata } from '../models/TaskMetadata';
+import { ITaskMetadataRepository } from '../repositories/interfaces/ITaskMetadataRepository';
+import { ITaskRepository } from '../repositories/interfaces/ITaskRepository';
 import { UpsertTaskMetadataData } from '../repositories/interfaces/ITaskMetadataRepository';
 import { ITaskService } from './interfaces/ITaskService';
 
@@ -20,45 +20,89 @@ export class TaskService implements ITaskService {
     }
   }
 
-  listByUser(_userId: number): Promise<Task[]> {
-    return Promise.reject(new AppError('Task list not implemented yet', 501, 'NOT_IMPLEMENTED'));
+  async listByUser(userId: number): Promise<Task[]> {
+    return this.taskRepository.findAllByUser(userId);
   }
 
-  getById(_id: number, _userId: number): Promise<Task> {
-    return Promise.reject(new AppError('Task getById not implemented yet', 501, 'NOT_IMPLEMENTED'));
+  async getById(id: number, userId: number): Promise<Task> {
+    return this.assertTaskOwnership(id, userId);
   }
 
-  create(_userId: number, _data: Omit<CreateTaskData, 'userId'>): Promise<Task> {
-    return Promise.reject(new AppError('Task create not implemented yet', 501, 'NOT_IMPLEMENTED'));
+  async create(userId: number, data: Omit<CreateTaskData, 'userId'>): Promise<Task> {
+    const task = await this.taskRepository.create({
+      title: data.title,
+      description: data.description ?? null,
+      userId,
+    });
+
+    await this.taskMetadataRepository.upsert(task.id, userId, {
+      historyEntry: { action: 'task_created' },
+    });
+
+    return task;
   }
 
-  update(_id: number, _userId: number, _data: UpdateTaskData): Promise<Task> {
-    return Promise.reject(new AppError('Task update not implemented yet', 501, 'NOT_IMPLEMENTED'));
+  async update(id: number, userId: number, data: UpdateTaskData): Promise<Task> {
+    await this.assertTaskOwnership(id, userId);
+
+    return this.taskRepository.update(id, userId, data);
   }
 
-  toggleCompleted(_id: number, _userId: number): Promise<Task> {
-    return Promise.reject(
-      new AppError('Task toggleCompleted not implemented yet', 501, 'NOT_IMPLEMENTED'),
-    );
+  async toggleCompleted(id: number, userId: number): Promise<Task> {
+    const task = await this.assertTaskOwnership(id, userId);
+
+    const updatedTask = await this.taskRepository.update(id, userId, {
+      completed: !task.completed,
+    });
+
+    await this.taskMetadataRepository.upsert(id, userId, {
+      historyEntry: {
+        action: updatedTask.completed ? 'task_completed' : 'task_reopened',
+      },
+    });
+
+    return updatedTask;
   }
 
-  delete(_id: number, _userId: number): Promise<void> {
-    return Promise.reject(new AppError('Task delete not implemented yet', 501, 'NOT_IMPLEMENTED'));
+  async delete(id: number, userId: number): Promise<void> {
+    await this.assertTaskOwnership(id, userId);
+
+    await this.taskRepository.delete(id, userId);
+    await this.taskMetadataRepository.deleteByTaskId(id);
   }
 
-  getMetadata(_taskId: number, _userId: number): Promise<TaskMetadata> {
-    return Promise.reject(
-      new AppError('Task getMetadata not implemented yet', 501, 'NOT_IMPLEMENTED'),
-    );
+  async getMetadata(taskId: number, userId: number): Promise<TaskMetadata> {
+    await this.assertTaskOwnership(taskId, userId);
+
+    const metadata = await this.taskMetadataRepository.findByTaskId(taskId);
+
+    if (!metadata) {
+      throw new NotFoundError('Task metadata not found');
+    }
+
+    return metadata;
   }
 
-  upsertMetadata(
-    _taskId: number,
-    _userId: number,
-    _data: UpsertTaskMetadataData,
+  async upsertMetadata(
+    taskId: number,
+    userId: number,
+    data: UpsertTaskMetadataData,
   ): Promise<TaskMetadata> {
-    return Promise.reject(
-      new AppError('Task upsertMetadata not implemented yet', 501, 'NOT_IMPLEMENTED'),
-    );
+    await this.assertTaskOwnership(taskId, userId);
+
+    return this.taskMetadataRepository.upsert(taskId, userId, {
+      ...data,
+      historyEntry: data.historyEntry ?? { action: 'metadata_updated' },
+    });
+  }
+
+  private async assertTaskOwnership(taskId: number, userId: number): Promise<Task> {
+    const task = await this.taskRepository.findByIdAndUser(taskId, userId);
+
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+
+    return task;
   }
 }
