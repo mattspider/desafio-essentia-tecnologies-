@@ -23,34 +23,40 @@ export class TaskMetadataRepository implements ITaskMetadataRepository {
       ? { action: data.historyEntry.action, at: data.historyEntry.at ?? new Date() }
       : undefined;
 
-    const document = await TaskMetadataModel.findOneAndUpdate(
-      { taskId },
-      {
-        $set: {
-          userId,
-          ...(data.tags !== undefined && { tags: data.tags }),
-          ...(data.priority !== undefined && { priority: data.priority }),
-          ...(data.notes !== undefined && { notes: data.notes }),
-        },
-        ...(historyEntry && {
-          $push: { history: historyEntry },
-        }),
-        $setOnInsert: {
-          taskId,
-          userId,
-          tags: data.tags ?? [],
-          priority: data.priority ?? 'medium',
-          notes: data.notes ?? '',
-        },
-      },
-      { new: true, upsert: true },
-    ).lean();
+    let document = await TaskMetadataModel.findOne({ taskId });
 
     if (!document) {
-      throw new Error('Failed to upsert task metadata');
+      document = await TaskMetadataModel.create({
+        taskId,
+        userId,
+        tags: data.tags ?? [],
+        priority: data.priority ?? 'medium',
+        notes: data.notes ?? '',
+        history: historyEntry ? [historyEntry] : [],
+      });
+
+      return this.toDomain(document.toObject());
     }
 
-    return this.toDomain(document);
+    if (data.tags !== undefined) {
+      document.tags = data.tags;
+    }
+
+    if (data.priority !== undefined) {
+      document.priority = data.priority;
+    }
+
+    if (data.notes !== undefined) {
+      document.notes = data.notes;
+    }
+
+    if (historyEntry) {
+      document.history.push(historyEntry);
+    }
+
+    await document.save();
+
+    return this.toDomain(document.toObject());
   }
 
   async deleteByTaskId(taskId: number): Promise<void> {
