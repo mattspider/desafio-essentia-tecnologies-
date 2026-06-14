@@ -6,6 +6,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Testes-Vitest-6E9F18?logo=vitest&logoColor=white)
+![CI](https://github.com/mattspider/desafio-essentia-tecnologies-/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -18,6 +19,7 @@
 - [API](#api)
 - [Banco de Dados](#banco-de-dados)
 - [Testes](#testes)
+- [CI/CD](#cicd)
 - [Postman](#postman)
 - [Docker](#docker)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
@@ -51,6 +53,7 @@
 
 - Docker Compose (MySQL + MongoDB + API)
 - Testes unitários com Vitest (services mockados)
+- GitHub Actions — lint, testes e build em cada push/PR na `main`
 - Collection Postman para testar a API
 
 ---
@@ -124,7 +127,8 @@ As escolhas abaixo orientam o desenho do backend. Detalhes de SOLID, patterns e 
 ### Ambiente
 
 - Docker e Docker Compose
-- GitHub Actions + deploy Vercel *(em breve)*
+- GitHub Actions (CI do backend)
+- Vercel (deploy do frontend Angular — após Fase 8)
 
 ---
 
@@ -284,6 +288,41 @@ Cobertura atual: `AuthService` e `TaskService`.
 
 ---
 
+## CI/CD
+
+### GitHub Actions
+
+Workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — dispara em **push** e **pull request** na branch `main`:
+
+| Etapa | Comando | Descrição |
+|-------|---------|-----------|
+| Lint | `npm run lint` | ESLint no código TypeScript |
+| Test | `npm test` | 22 testes unitários (Vitest) |
+| Build | `npm run build` | Prisma generate + compilação |
+
+O job usa `backend/.env.example` como `.env` — não precisa de MySQL/Mongo reais no CI.
+
+### Vercel (frontend)
+
+Configuração em [`frontend/vercel.json`](frontend/vercel.json). Após criar o app Angular (Fase 8):
+
+1. Importe o repositório em [vercel.com](https://vercel.com)
+2. **Root Directory:** `frontend`
+3. **Environment Variable:** `API_URL` → URL pública da API (ex.: `https://sua-api.com/api`)
+4. Ajuste `outputDirectory` no `vercel.json` se o nome do projeto Angular for diferente de `techx-todo`
+
+> A API Express roda melhor em Docker (Render, Railway, etc.). Vercel fica reservado ao **frontend** Angular.
+
+### Deploy da API (produção)
+
+```bash
+docker compose up -d --build
+```
+
+Ou publique a imagem `backend/Dockerfile` em um serviço containerizado com MySQL e MongoDB gerenciados.
+
+---
+
 ## Postman
 
 Importe os arquivos em `postman/`:
@@ -370,11 +409,13 @@ Documentação completa (SOLID, patterns, camadas): [docs/ARCHITECTURE.md](docs/
 
 ```
 .
+├── .github/workflows/  # CI (GitHub Actions)
 ├── backend/          # API REST (Express + TypeScript)
 │   ├── prisma/       # Schema e migrations MySQL
 │   ├── src/          # Controllers, services, repositories
 │   └── tests/        # Testes unitários (Vitest)
 ├── frontend/         # SPA Angular (em desenvolvimento)
+│   └── vercel.json   # Config de deploy Vercel
 ├── docs/             # Documentação de arquitetura
 ├── postman/          # Collection para testes da API
 └── docker-compose.yml
