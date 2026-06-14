@@ -53,7 +53,7 @@
 
 - Docker Compose (MySQL + MongoDB + API)
 - Testes unitários com Vitest (services mockados)
-- GitHub Actions — lint, testes e build em cada push/PR na `main`
+- GitHub Actions — lint, testes e build (backend + frontend)
 - Collection Postman para testar a API
 
 ---
@@ -310,13 +310,22 @@ Cobertura atual: `AuthService` e `TaskService`.
 
 Workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — dispara em **push** e **pull request** na branch `main`:
 
+**Backend**
+
 | Etapa | Comando | Descrição |
 |-------|---------|-----------|
-| Lint | `npm run lint` | ESLint no código TypeScript |
-| Test | `npm test` | 22 testes unitários (Vitest) |
-| Build | `npm run build` | Prisma generate + compilação |
+| Lint | `npm run lint` | ESLint |
+| Test | `npm test` | Vitest (22 testes) |
+| Build | `npm run build` | Prisma + TypeScript |
 
-O job usa `backend/.env.example` como `.env` — não precisa de MySQL/Mongo reais no CI.
+**Frontend**
+
+| Etapa | Comando | Descrição |
+|-------|---------|-----------|
+| Test | `npm run test:ci` | Karma + ChromeHeadless |
+| Build | `npm run build:ci` | Angular production build |
+
+O backend usa `backend/.env.example` no CI. O frontend gera `environment.production.ts` a partir de `API_URL` (padrão: localhost).
 
 ### Vercel (frontend)
 
@@ -324,10 +333,10 @@ Configuração em [`frontend/vercel.json`](frontend/vercel.json):
 
 1. Importe o repositório em [vercel.com](https://vercel.com)
 2. **Root Directory:** `frontend`
-3. **Environment Variable:** `API_URL` → URL pública da API (ex.: `https://sua-api.com/api`)
-4. Atualize `src/environments/environment.production.ts` com a mesma `apiUrl` *(ou configure file replacement no build)*
+3. **Environment Variable (Production):** `API_URL` = URL pública da API (ex.: `https://sua-api.com/api`)
+4. O script `scripts/generate-env.js` roda no `prebuild` e injeta `API_URL` em `environment.production.ts`
 
-> A API Express roda melhor em Docker (Render, Railway, etc.). Vercel fica reservado ao **frontend** Angular.
+Configure também `CORS_ORIGIN` no **backend** de produção com a URL do Vercel (ex.: `https://seu-app.vercel.app`).
 
 ### Deploy da API (produção)
 
@@ -398,7 +407,7 @@ No Docker, o Compose carrega `backend/.env` e **sobrescreve** `DATABASE_URL` e `
 | Arquivo | Uso |
 |---------|-----|
 | `backend/.env` | Segredos e infra: MySQL, MongoDB, JWT, porta, CORS |
-| `frontend/.env` | Config pública: `API_URL` *(quando o Angular estiver pronto)* |
+| `frontend/.env` | `API_URL` para build de produção local (via `prebuild`) |
 
 ```bash
 cp backend/.env.example backend/.env
