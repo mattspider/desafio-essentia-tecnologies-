@@ -122,13 +122,15 @@ As escolhas abaixo orientam o desenho do backend. Detalhes de SOLID, patterns e 
 
 | Camada | Tecnologias |
 |--------|-------------|
-| SPA | Angular 17+, Angular Material, TypeScript |
+| SPA | Angular 19, Angular Material, TypeScript |
+| HTTP | HttpClient + interceptor JWT |
+| Auth | Guards, localStorage, reactive forms |
 
 ### Ambiente
 
 - Docker e Docker Compose
 - GitHub Actions (CI do backend)
-- Vercel (deploy do frontend Angular — após Fase 8)
+- Vercel (deploy do frontend Angular)
 
 ---
 
@@ -173,6 +175,20 @@ Resposta esperada:
 |---------|-----|
 | API | http://localhost:3000/api |
 | Health check | http://localhost:3000/api/health |
+| Frontend (dev) | http://localhost:4200 |
+
+### Frontend (desenvolvimento)
+
+Com a API rodando (Docker ou `npm run dev` no backend):
+
+```bash
+cp frontend/.env.example frontend/.env   # API_URL=http://localhost:3000/api
+cd frontend
+npm install
+npm start
+```
+
+Abra http://localhost:4200 — cadastre-se ou entre e gerencie tarefas.
 
 ### Modo desenvolvimento (API fora do Docker)
 
@@ -304,12 +320,12 @@ O job usa `backend/.env.example` como `.env` — não precisa de MySQL/Mongo rea
 
 ### Vercel (frontend)
 
-Configuração em [`frontend/vercel.json`](frontend/vercel.json). Após criar o app Angular (Fase 8):
+Configuração em [`frontend/vercel.json`](frontend/vercel.json):
 
 1. Importe o repositório em [vercel.com](https://vercel.com)
 2. **Root Directory:** `frontend`
 3. **Environment Variable:** `API_URL` → URL pública da API (ex.: `https://sua-api.com/api`)
-4. Ajuste `outputDirectory` no `vercel.json` se o nome do projeto Angular for diferente de `techx-todo`
+4. Atualize `src/environments/environment.production.ts` com a mesma `apiUrl` *(ou configure file replacement no build)*
 
 > A API Express roda melhor em Docker (Render, Railway, etc.). Vercel fica reservado ao **frontend** Angular.
 
@@ -414,7 +430,8 @@ Documentação completa (SOLID, patterns, camadas): [docs/ARCHITECTURE.md](docs/
 │   ├── prisma/       # Schema e migrations MySQL
 │   ├── src/          # Controllers, services, repositories
 │   └── tests/        # Testes unitários (Vitest)
-├── frontend/         # SPA Angular (em desenvolvimento)
+├── frontend/         # SPA Angular + Material
+│   ├── src/app/      # features (auth, tasks), core (services, guards)
 │   └── vercel.json   # Config de deploy Vercel
 ├── docs/             # Documentação de arquitetura
 ├── postman/          # Collection para testes da API

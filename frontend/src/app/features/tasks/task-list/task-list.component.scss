@@ -1,0 +1,100 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.user-name {
+  margin-right: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.create-form,
+.edit-form,
+.metadata-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.list-card mat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.center-state {
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.empty-state {
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  padding: 1rem;
+}
+
+.task-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.task-actions,
+.inline-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.metadata-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.metadata-section h4 {
+  margin: 0 0 1rem;
+}
+
+.metadata-error {
+  color: #c62828;
+  margin-bottom: 1rem;
+}
+
+.history-list {
+  margin: 0.75rem 0 1rem;
+  max-height: 180px;
+  overflow: auto;
+}
+
+button mat-spinner {
+  margin: 0 auto;
+}
