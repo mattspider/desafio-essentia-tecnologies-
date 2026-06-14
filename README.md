@@ -137,6 +137,9 @@ docker compose down -v         # parar e remover volumes
 | `npm run db:migrate` | Cria/aplica migrations (dev) |
 | `npm run db:migrate:deploy` | Aplica migrations (prod/CI) |
 | `npm run db:studio` | Abre Prisma Studio |
+| `npm test` | Executa testes unitários (Vitest) |
+| `npm run test:watch` | Testes em modo watch |
+| `npm run test:coverage` | Testes com relatório de cobertura |
 
 ## Status de implementação
 
@@ -146,7 +149,7 @@ docker compose down -v         # parar e remover volumes
 - [x] Fase 3 — Autenticação JWT
 - [x] Fase 4 — CRUD de tarefas + metadados MongoDB
 - [x] Fase 5 — Docker completo
-- [ ] Fase 6 — Testes unitários
+- [x] Fase 6 — Testes unitários
 - [ ] Fase 7 — CI/CD (GitHub Actions + Vercel)
 - [ ] Fase 8–10 — Frontend Angular
 - [ ] Fase 11 — Documentação final
