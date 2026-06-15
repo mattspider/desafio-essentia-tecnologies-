@@ -11,7 +11,7 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 | **Repositório** | [github.com/mattspider/desafio-essentia-tecnologies-](https://github.com/mattspider/desafio-essentia-tecnologies-) |
 | **API (produção)** | [desafio-essentia-tecnologies-production.up.railway.app/api](https://desafio-essentia-tecnologies-production.up.railway.app/api) |
 | **Health check** | […/api/health](https://desafio-essentia-tecnologies-production.up.railway.app/api/health) |
-| **Frontend** | Deploy na Vercel — veja [Deploy](#deploy) |
+| **Frontend** | [desafio-essentia-tecnologies-fronte.vercel.app](https://desafio-essentia-tecnologies-fronte.vercel.app/) |
 
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
