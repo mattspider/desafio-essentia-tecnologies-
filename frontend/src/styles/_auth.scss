@@ -136,6 +136,10 @@
   flex-direction: column;
   gap: 0.25rem;
   margin-top: 1.25rem;
+
+  mat-form-field mat-icon[matPrefix] {
+    color: var(--tx-text-muted);
+  }
 }
 
 .auth-form button[type='submit'] {

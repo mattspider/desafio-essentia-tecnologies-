@@ -1,0 +1,123 @@
+.metadata-section {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border-radius: var(--tx-radius-sm);
+  background: var(--tx-surface-elevated);
+  border: 1px solid var(--tx-border);
+}
+
+.metadata-section__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  mat-icon {
+    color: var(--tx-primary);
+    margin-top: 0.125rem;
+  }
+
+  h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--tx-text);
+  }
+
+  p {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: var(--tx-text-muted);
+  }
+}
+
+.metadata-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tx-text-muted);
+}
+
+.field-readonly {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--tx-text-muted);
+}
+
+.priority-toggle {
+  width: fit-content;
+  border-radius: var(--tx-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--tx-border);
+}
+
+.metadata-form__tags mat-icon[matPrefix] {
+  color: var(--tx-text-muted);
+}
+
+.metadata-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0 1rem;
+  color: var(--tx-text-muted);
+  font-size: 0.875rem;
+}
+
+.metadata-error {
+  color: var(--tx-danger);
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.preview-block {
+  margin-bottom: 0.75rem;
+}
+
+.preview-block__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tx-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.tag-list {
+  margin: 0;
+}
+
+.metadata-form button[type='submit'] {
+  align-self: flex-start;
+  border-radius: var(--tx-radius-sm) !important;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 599px) {
+  .priority-toggle {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

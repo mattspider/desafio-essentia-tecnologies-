@@ -1,0 +1,75 @@
+<section class="metadata-section">
+  <div class="metadata-section__header">
+    <mat-icon>tune</mat-icon>
+    <div>
+      <h4>Prioridade, tags e notas</h4>
+      <p>Metadados salvos no MongoDB — edite e clique em salvar.</p>
+    </div>
+  </div>
+
+  @if (task().metadataLoading) {
+    <div class="metadata-loading">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Carregando metadados...</span>
+    </div>
+  } @else if (task().metadataError) {
+    <p class="metadata-error">{{ task().metadataError }}</p>
+  }
+
+  <form [formGroup]="form()" (ngSubmit)="save.emit()" class="metadata-form">
+    <div class="field-block">
+      <span class="field-label">Status</span>
+      <div class="field-readonly">
+        <app-task-badges [completed]="task().completed" />
+        <span class="field-hint">
+          Marque o checkbox acima para alternar entre pendente e concluída.
+        </span>
+      </div>
+    </div>
+
+    <div class="field-block">
+      <span class="field-label">Prioridade</span>
+      <mat-button-toggle-group
+        formControlName="priority"
+        class="priority-toggle"
+        aria-label="Prioridade da tarefa"
+      >
+        @for (priority of priorities(); track priority) {
+          <mat-button-toggle [value]="priority">
+            {{ priorityLabel(priority) }}
+          </mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    </div>
+
+    <mat-form-field appearance="outline" class="metadata-form__tags">
+      <mat-label>Tags</mat-label>
+      <mat-icon matPrefix>sell</mat-icon>
+      <input matInput formControlName="tagsInput" />
+      <mat-hint>Separe por vírgula — ex.: urgente, trabalho, pessoal</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="3" formControlName="notes"></textarea>
+      <mat-hint>Observações adicionais sobre a tarefa</mat-hint>
+    </mat-form-field>
+
+    @if (metadata()?.tags?.length) {
+      <div class="preview-block">
+        <span class="preview-block__label">Tags salvas</span>
+        <mat-chip-set class="tag-list">
+          @for (tag of metadata()!.tags; track tag) {
+            <mat-chip>{{ tag }}</mat-chip>
+          }
+        </mat-chip-set>
+      </div>
+    }
+
+    @if (metadata()?.history?.length) {
+      <app-task-history-list [history]="metadata()!.history" />
+    }
+
+    <button mat-flat-button color="primary" type="submit">Salvar prioridade e tags</button>
+  </form>
+</section>

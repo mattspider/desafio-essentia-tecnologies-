@@ -1,0 +1,12 @@
+<div class="history-block">
+  <span class="history-block__title">Histórico de alterações</span>
+  <mat-list class="history-list">
+    @for (entry of history(); track entry.at + entry.action) {
+      <mat-list-item>
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>{{ entry.action }}</span>
+        <span matListItemLine>{{ entry.at | date: 'short' }}</span>
+      </mat-list-item>
+    }
+  </mat-list>
+</div>

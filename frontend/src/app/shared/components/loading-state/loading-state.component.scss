@@ -1,0 +1,16 @@
+.center-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border-radius: var(--tx-radius-md);
+  border: 1px dashed var(--tx-border-strong);
+  background: var(--tx-surface);
+
+  p {
+    margin: 0.75rem 0 0;
+    color: var(--tx-text-muted);
+  }
+}
