@@ -46,10 +46,17 @@ describe('TaskComposerComponent', () => {
     });
   });
 
-  it('should reset form after reset()', () => {
+  it('should reset form and validation state after reset()', () => {
+    component.showValidationErrors = true;
     component.form.setValue({ title: 'X', description: 'Y' });
+    component.form.markAllAsTouched();
+
     component.reset();
+
     expect(component.form.getRawValue()).toEqual({ title: '', description: '' });
+    expect(component.showValidationErrors).toBeFalse();
+    expect(component.form.touched).toBeFalse();
+    expect(component.form.pristine).toBeTrue();
   });
 
   it('should not emit when creating is true', () => {

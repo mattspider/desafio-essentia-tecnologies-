@@ -10,7 +10,7 @@
           <mat-label>Título</mat-label>
           <input matInput formControlName="title" />
           <mat-hint>Ex.: Revisar documentação</mat-hint>
-          @if (form.controls.title.touched && form.controls.title.invalid) {
+          @if (showValidationErrors && form.controls.title.invalid) {
             <mat-error>Título é obrigatório</mat-error>
           }
         </mat-form-field>

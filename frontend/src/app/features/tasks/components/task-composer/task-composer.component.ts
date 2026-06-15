@@ -27,6 +27,8 @@ export class TaskComposerComponent {
   readonly creating = input(false);
   readonly create = output<CreateTaskRequest>();
 
+  showValidationErrors = false;
+
   readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.minLength(1)]],
     description: [''],
@@ -34,6 +36,7 @@ export class TaskComposerComponent {
 
   submit(): void {
     if (this.form.invalid || this.creating()) {
+      this.showValidationErrors = true;
       this.form.markAllAsTouched();
       return;
     }
@@ -46,6 +49,9 @@ export class TaskComposerComponent {
   }
 
   reset(): void {
-    this.form.reset();
+    this.showValidationErrors = false;
+    this.form.reset({ title: '', description: '' });
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
   }
 }
