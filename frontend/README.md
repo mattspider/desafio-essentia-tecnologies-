@@ -17,8 +17,10 @@ npm start              # http://localhost:4200 (dev)
 npm run build          # prebuild (API_URL) + build production
 npm run build:ci       # build production (CI/Vercel)
 npm test               # Karma (watch)
-npm run test:ci        # Karma headless (CI)
+npm run test:ci        # Karma headless (CI) — 38 specs
 ```
+
+Cobertura principal: utils (`task-labels`, `task-display`), pipes (`userInitials`), componentes dumb (`StatCard`, `TaskBadges`, `TaskComposer`, `AuthPasswordField`, `EmptyState`) e container smart (`TaskListComponent` com mocks).
 
 ## Ambientes
 

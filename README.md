@@ -323,6 +323,8 @@ cd frontend
 npm run test:ci
 ```
 
+Inclui testes de utils, pipes, componentes presentacionais e `TaskListComponent` (smart) com `TaskService` mockado.
+
 ---
 
 ## CI/CD
