@@ -50,8 +50,10 @@ describe('TaskComposerComponent', () => {
     component.showValidationErrors = true;
     component.form.setValue({ title: 'X', description: 'Y' });
     component.form.markAllAsTouched();
+    fixture.detectChanges();
 
     component.reset();
+    fixture.detectChanges();
 
     expect(component.form.getRawValue()).toEqual({ title: '', description: '' });
     expect(component.showValidationErrors).toBeFalse();
