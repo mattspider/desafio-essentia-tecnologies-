@@ -17,10 +17,10 @@ npm start              # http://localhost:4200 (dev)
 npm run build          # prebuild (API_URL) + build production
 npm run build:ci       # build production (CI/Vercel)
 npm test               # Karma (watch)
-npm run test:ci        # Karma headless (CI) — 38 specs
+npm run test:ci        # Karma headless (CI) — 43 specs
 ```
 
-Cobertura principal: utils (`task-labels`, `task-display`), pipes (`userInitials`), componentes dumb (`StatCard`, `TaskBadges`, `TaskComposer`, `AuthPasswordField`, `EmptyState`) e container smart (`TaskListComponent` com mocks).
+Cobertura principal: utils, pipes, componentes dumb, `TaskFacadeService` (estado + API) e `TaskListComponent` (delegação).
 
 ## Ambientes
 
@@ -63,7 +63,8 @@ src/app/
 │       ├── components/ # app-header, task-board, task-panel, …
 │       ├── models/
 │       ├── utils/
-│       └── task-list/  # smart container (orquestra API + estado)
+│       ├── services/   # task-facade.service (estado + API)
+│       └── task-list/  # smart container fino
 └── shared/
     ├── components/     # theme-toggle, stat-card, user-chip, …
     └── pipes/          # userInitials
@@ -72,7 +73,8 @@ src/styles/             # _tokens, _auth, _badges, _material-overrides
 
 ## Padrão smart/dumb
 
-- **Smart:** `TaskListComponent`, `LoginComponent`, `RegisterComponent` — chamam services, gerenciam estado e feedback ao usuário.
+- **Smart:** `TaskListComponent`, `LoginComponent`, `RegisterComponent` — layout e delegação.
+- **Facade:** `TaskFacadeService` — estado, CRUD, metadados e snackbars na feature tasks.
 - **Dumb:** demais componentes em `features/*/components/` e `shared/` — apenas apresentação via `@Input()` / `@Output()`.
 
 Detalhes: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#frontend).

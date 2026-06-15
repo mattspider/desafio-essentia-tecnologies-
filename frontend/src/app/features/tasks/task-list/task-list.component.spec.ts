@@ -2,11 +2,12 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { TaskService } from '../../../core/services/task.service';
 import { Task } from '../../../core/models/task.model';
 import { TaskListComponent } from './task-list.component';
+import { TaskFacadeService } from '../services/task-facade.service';
 
 const sampleTask: Task = {
   id: 1,
@@ -21,6 +22,7 @@ const sampleTask: Task = {
 describe('TaskListComponent', () => {
   let fixture: ComponentFixture<TaskListComponent>;
   let component: TaskListComponent;
+  let facade: TaskFacadeService;
   let taskService: jasmine.SpyObj<TaskService>;
 
   beforeEach(async () => {
@@ -52,51 +54,36 @@ describe('TaskListComponent', () => {
 
     fixture = TestBed.createComponent(TaskListComponent);
     component = fixture.componentInstance;
+    facade = component.facade;
     fixture.detectChanges();
   });
 
-  it('should load tasks on init', () => {
+  it('should load tasks on init via facade', () => {
     expect(taskService.list).toHaveBeenCalled();
-    expect(component.tasks.length).toBe(1);
-    expect(component.tasks[0].title).toBe('Revisar docs');
-    expect(component.loading).toBeFalse();
+    expect(facade.tasks().length).toBe(1);
+    expect(facade.loading()).toBeFalse();
   });
 
-  it('should compute pending and completed counts', () => {
-    component.tasks = [
-      { ...sampleTask, id: 1, completed: false, metadataFetched: false },
-      { ...sampleTask, id: 2, completed: true, metadataFetched: false },
-    ];
-
-    expect(component.pendingCount).toBe(1);
-    expect(component.completedCount).toBe(1);
-  });
-
-  it('should create task and prepend to list', () => {
+  it('should delegate createTask to facade', () => {
     const created: Task = { ...sampleTask, id: 2, title: 'Nova' };
     taskService.create.and.returnValue(of(created));
+    spyOn(facade, 'createTask').and.callThrough();
 
     component.createTask({ title: 'Nova', description: null });
 
-    expect(taskService.create).toHaveBeenCalledWith({ title: 'Nova', description: null });
-    expect(component.tasks[0].id).toBe(2);
-    expect(component.creating).toBeFalse();
+    expect(facade.createTask).toHaveBeenCalled();
+    expect(facade.tasks()[0].id).toBe(2);
   });
 
-  it('should show error state when load fails', () => {
-    taskService.list.and.returnValue(throwError(() => ({ status: 500 })));
-    component.loadTasks();
-    expect(component.loading).toBeFalse();
-  });
-
-  it('should toggle completed via service', () => {
-    component.tasks = [{ ...sampleTask, metadataFetched: false }];
+  it('should delegate toggleCompleted to facade', () => {
+    facade.tasks.set([{ ...sampleTask, metadataFetched: false }]);
     const updated = { ...sampleTask, completed: true };
     taskService.toggleCompleted.and.returnValue(of(updated));
+    spyOn(facade, 'toggleCompleted').and.callThrough();
 
-    component.toggleCompleted(component.tasks[0]);
+    component.toggleCompleted(facade.tasks()[0]);
 
-    expect(taskService.toggleCompleted).toHaveBeenCalledWith(1);
-    expect(component.tasks[0].completed).toBeTrue();
+    expect(facade.toggleCompleted).toHaveBeenCalled();
+    expect(facade.tasks()[0].completed).toBeTrue();
   });
 });

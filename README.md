@@ -67,7 +67,7 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 - Telas de login e cadastro com layout reutilizável (`AuthShell`, `AuthCard`, `AuthPasswordField`)
 - Dashboard com cards de estatísticas (`TaskStats`, `StatCard`)
 - Lista de tarefas componentizada: composer, board, panel, badges, metadados e histórico
-- Padrão **smart/dumb**: `TaskListComponent` orquestra API e estado; filhos recebem `@Input` / `@Output`
+- Padrão **smart/dumb/facade**: `TaskFacadeService` concentra estado e API; `TaskListComponent` compõe layout; filhos recebem `@Input` / `@Output`
 - Tema claro / escuro persistente (`ThemeService` + `localStorage`)
 - Integração HTTP com cookies (`withCredentials`), interceptor CSRF e guards de rota assíncronos
 
@@ -323,7 +323,7 @@ cd frontend
 npm run test:ci
 ```
 
-Inclui testes de utils, pipes, componentes presentacionais e `TaskListComponent` (smart) com `TaskService` mockado.
+Inclui testes de utils, pipes, componentes presentacionais, `TaskFacadeService` e `TaskListComponent`.
 
 ---
 

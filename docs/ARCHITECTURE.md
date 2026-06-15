@@ -185,7 +185,8 @@ O frontend Angular usa organização por **features** com `core/`, `features/` e
 
 | Tipo | Exemplos | Responsabilidade |
 |------|----------|------------------|
-| **Smart (container)** | `LoginComponent`, `RegisterComponent`, `TaskListComponent` | Formulários de fluxo, chamadas HTTP, snackbars, estado local |
+| **Smart (container)** | `LoginComponent`, `RegisterComponent`, `TaskListComponent` | Composição de layout, delegação ao facade, logout |
+| **Facade** | `TaskFacadeService` | Estado das tarefas (signals), forms de edição/metadados, chamadas HTTP, snackbars |
 | **Dumb (presentational)** | `AuthShellComponent`, `TaskComposerComponent`, `TaskPanelComponent`, … | Renderização, `@Input()` / `@Output()`, sem acesso direto à API |
 
 ### Estrutura `features/auth/`
@@ -218,7 +219,9 @@ features/tasks/
 │   └── task-history-list/    # histórico de alterações
 ├── models/                   # TaskViewModel
 ├── utils/                    # labels e helpers de display
-└── task-list/                # TaskListComponent (smart container)
+├── services/
+│   └── task-facade.service.ts  # estado + API + feedback (scoped à rota)
+└── task-list/                # TaskListComponent (smart container fino)
 ```
 
 ### Estrutura `shared/`

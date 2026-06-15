@@ -2,24 +2,24 @@
 
 <main class="app-main">
   <app-task-stats
-    [total]="tasks.length"
-    [pending]="pendingCount"
-    [completed]="completedCount"
+    [total]="facade.tasks().length"
+    [pending]="facade.pendingCount()"
+    [completed]="facade.completedCount()"
   />
 
   <div class="tasks-layout">
-    <app-task-composer [creating]="creating" (create)="createTask($event)" />
+    <app-task-composer [creating]="facade.creating()" (create)="createTask($event)" />
 
     <app-task-board
-      [tasks]="tasks"
-      [loading]="loading"
-      [pendingCount]="pendingCount"
-      [completedCount]="completedCount"
-      [editingTaskId]="editingTaskId"
-      [editForm]="editForm"
-      [metadataForms]="metadataForms"
-      [priorities]="priorities"
-      (refresh)="loadTasks()"
+      [tasks]="facade.tasks()"
+      [loading]="facade.loading()"
+      [pendingCount]="facade.pendingCount()"
+      [completedCount]="facade.completedCount()"
+      [editingTaskId]="facade.editingTaskId()"
+      [editForm]="facade.editForm"
+      [metadataForms]="facade.metadataForms"
+      [priorities]="facade.priorities"
+      (refresh)="facade.loadTasks()"
       (toggleCompleted)="toggleCompleted($event)"
       (edit)="startEdit($event)"
       (delete)="deleteTask($event)"
