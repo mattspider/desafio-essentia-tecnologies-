@@ -2,7 +2,7 @@
 
 > Aplicação full-stack de gerenciamento de tarefas — **Desafio Técnico Essentia Technologies** (TechX).
 
-Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histórico de alterações. Backend em camadas com JWT, MySQL (Prisma) e metadados no MongoDB (Mongoose). Frontend Angular 19 com Material, tema claro/escuro e deploy na Vercel.
+Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histórico de alterações. Backend em camadas com sessão JWT em cookie HttpOnly + CSRF, MySQL (Prisma) e metadados no MongoDB (Mongoose). Frontend Angular 19 com Material, componentização smart/dumb, tema claro/escuro e deploy na Vercel.
 
 ![Dashboard — tema claro](docs/screenshots/app-dashboard-light.png)
 
@@ -64,11 +64,12 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 
 ### Frontend (Angular)
 
-- Telas de login e cadastro (layout split, validação reativa)
-- Dashboard com cards de estatísticas (total, pendentes, concluídas)
-- Lista de tarefas com badges de status, prioridade e tags
-- Tema claro / escuro persistente
-- Integração HTTP com cookies (`withCredentials`), interceptor CSRF e guards de rota
+- Telas de login e cadastro com layout reutilizável (`AuthShell`, `AuthCard`, `AuthPasswordField`)
+- Dashboard com cards de estatísticas (`TaskStats`, `StatCard`)
+- Lista de tarefas componentizada: composer, board, panel, badges, metadados e histórico
+- Padrão **smart/dumb**: `TaskListComponent` orquestra API e estado; filhos recebem `@Input` / `@Output`
+- Tema claro / escuro persistente (`ThemeService` + `localStorage`)
+- Integração HTTP com cookies (`withCredentials`), interceptor CSRF e guards de rota assíncronos
 
 ### Qualidade e DevOps
 
@@ -105,7 +106,7 @@ Resumo das escolhas arquiteturais. Detalhes de SOLID, patterns e camadas: [docs/
 | Arquitetura | TSyringe, Controller → Service → Repository |
 | SQL | MySQL 8, Prisma |
 | NoSQL | MongoDB 7, Mongoose |
-| Auth | JWT + bcrypt |
+| Auth | JWT (cookie HttpOnly) + bcrypt + CSRF |
 | Testes | Vitest |
 
 ### Frontend
@@ -113,9 +114,9 @@ Resumo das escolhas arquiteturais. Detalhes de SOLID, patterns e camadas: [docs/
 | Camada | Stack |
 |--------|-------|
 | SPA | Angular 19, Angular Material, TypeScript |
-| HTTP | HttpClient + interceptor JWT |
-| Auth | Guards, localStorage, Reactive Forms |
-| UI | SCSS design tokens, tema claro/escuro |
+| HTTP | HttpClient + interceptor (`withCredentials`, header CSRF) |
+| Auth | Guards assíncronos, sessão via cookie (sem token no `localStorage`), Reactive Forms |
+| UI | SCSS design tokens, componentes shared, tema claro/escuro |
 
 ### Infra
 
@@ -194,7 +195,7 @@ npm run dev
 | API REST Node.js + TypeScript | ✅ |
 | CRUD de tarefas + marcar concluída | ✅ |
 | MySQL (dados principais) | ✅ |
-| JWT + autenticação | ✅ |
+| JWT + autenticação (cookie HttpOnly + CSRF) | ✅ |
 | MongoDB (metadados extras) | ✅ |
 | Frontend Angular 14+ | ✅ (Angular 19) |
 | Docker + README com setup | ✅ |
@@ -337,8 +338,6 @@ O CI usa `backend/.env.example`. O frontend gera `environment.production.ts` via
 
 ## Deploy
 
-Guia completo: **[docs/DEPLOY.md](docs/DEPLOY.md)**
-
 ### Resumo
 
 | Alvo | Plataforma | Configuração chave |
@@ -380,8 +379,8 @@ Arquivos em `postman/`:
 
 Fluxo:
 
-1. **Auth → Register** ou **Login** *(token salvo automaticamente)*
-2. **Tasks → Create Task**
+1. **Auth → Register** ou **Login** *(cookies de sessão + CSRF no environment)*
+2. **Tasks → Create Task** *(header `X-CSRF-Token` automático na collection)*
 3. **Tasks → Upsert Metadata** / **Get Metadata**
 
 ---
@@ -468,9 +467,11 @@ HTTP → Controller → Service → Repository → MySQL / MongoDB
 │   └── tests/             # Vitest
 ├── frontend/              # Angular 19 + Material
 │   ├── src/app/
-│   │   ├── core/          # Auth, guards, theme
-│   │   ├── features/      # auth, tasks
-│   │   └── shared/
+│   │   ├── core/          # Auth, guards, interceptor, services, theme
+│   │   ├── features/
+│   │   │   ├── auth/      # login, register + auth-shell, auth-card, …
+│   │   │   └── tasks/     # task-list (smart) + task-board, panel, …
+│   │   └── shared/        # theme-toggle, stat-card, user-chip, pipes, …
 │   └── vercel.json
 ├── docs/                  # Arquitetura, deploy, screenshots
 ├── postman/
@@ -483,9 +484,8 @@ HTTP → Controller → Service → Repository → MySQL / MongoDB
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | SOLID, patterns, fluxo de requisição, pastas |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | Railway, Vercel, CORS, checklist |
-| [frontend/README.md](frontend/README.md) | Scripts e env do Angular |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | SOLID, patterns, fluxo de requisição, frontend componentizado |
+| [frontend/README.md](frontend/README.md) | Scripts, env e estrutura Angular |
 
 ---
 

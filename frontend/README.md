@@ -4,9 +4,10 @@ SPA **Angular 19** + **Angular Material**. Documentação geral na [raiz do repo
 
 ## Funcionalidades
 
-- Login e cadastro (`features/auth`)
-- Lista de tarefas com CRUD, toggle e metadados MongoDB (`features/tasks`)
-- Interceptor JWT, `AuthGuard`, tema claro/escuro (`ThemeService`)
+- Login e cadastro com componentes reutilizáveis (`AuthShell`, `AuthCard`, `AuthPasswordField`)
+- Dashboard de tarefas componentizado (`TaskStats`, `TaskBoard`, `TaskPanel`, …)
+- Sessão via cookie HttpOnly + CSRF (`AuthService`, interceptor, guards assíncronos)
+- Tema claro/escuro persistente (`ThemeService`)
 
 ## Scripts
 
@@ -40,16 +41,36 @@ npm run test:ci        # Karma headless (CI)
 2. Production env: `API_URL=https://sua-api.com/api`
 3. No backend: `CORS_ORIGIN` = URL exata do app Vercel
 
-Passo a passo: [docs/DEPLOY.md](../docs/DEPLOY.md)
-
 ## Estrutura
 
 ```
 src/app/
-├── core/           # auth.service, task.service, guards, interceptor, theme
+├── core/
+│   ├── services/       # auth.service, task.service, theme.service
+│   ├── guards/         # authGuard, guestGuard
+│   ├── interceptors/   # CSRF + withCredentials
+│   ├── models/
+│   └── utils/
 ├── features/
-│   ├── auth/       # login, register
-│   └── tasks/      # task-list (smart component)
-└── shared/         # theme-toggle
-src/styles/         # tokens, auth layout, material overrides
+│   ├── auth/
+│   │   ├── components/ # auth-shell, auth-card, auth-password-field
+│   │   ├── constants/
+│   │   ├── login/
+│   │   └── register/
+│   └── tasks/
+│       ├── components/ # app-header, task-board, task-panel, …
+│       ├── models/
+│       ├── utils/
+│       └── task-list/  # smart container (orquestra API + estado)
+└── shared/
+    ├── components/     # theme-toggle, stat-card, user-chip, …
+    └── pipes/          # userInitials
+src/styles/             # _tokens, _auth, _badges, _material-overrides
 ```
+
+## Padrão smart/dumb
+
+- **Smart:** `TaskListComponent`, `LoginComponent`, `RegisterComponent` — chamam services, gerenciam estado e feedback ao usuário.
+- **Dumb:** demais componentes em `features/*/components/` e `shared/` — apenas apresentação via `@Input()` / `@Output()`.
+
+Detalhes: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#frontend).

@@ -5,7 +5,7 @@ export const LOGIN_BRAND: AuthBrandContent = {
   description:
     'Gerencie tarefas, prioridades e metadados em um só lugar — simples, rápido e seguro.',
   features: [
-    { icon: 'check_circle', label: 'Autenticação JWT' },
+    { icon: 'check_circle', label: 'Sessão segura (HttpOnly + CSRF)' },
     { icon: 'check_circle', label: 'Metadados com tags e prioridade' },
     { icon: 'check_circle', label: 'Sincronizado com a API' },
   ],
