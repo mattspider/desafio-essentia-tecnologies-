@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "techx-todo-api-collection",
     "name": "TechX Todo API",
-    "description": "Collection para testar a API do desafio TechX To-Do List.\n\n## Setup\n1. Importe esta collection e o environment `local.postman_environment.json`\n2. Selecione o environment **TechX Todo - Local**\n3. Suba os bancos: `docker compose up -d`\n4. Rode a API: `cd backend && npm run dev`\n5. Execute **Auth > Register** ou **Auth > Login** — o token é salvo automaticamente\n\n## Endpoints implementados\n- Health\n- Auth (register, login)\n\n## Endpoints planejados (Fase 4+)\nA pasta **Tasks** contém requests que exigem autenticação e serão habilitados na Fase 4.",
+    "description": "Collection para testar a API do desafio TechX To-Do List.\n\n## Setup (local)\n1. Importe esta collection e `local.postman_environment.json`\n2. Selecione o environment **TechX Todo - Local**\n3. Suba a stack: `docker compose up -d --build` (ou `npm run dev` no backend)\n4. Execute **Auth → Register** ou **Login** — o token é salvo automaticamente\n5. Use a pasta **Tasks** para CRUD e metadados\n\n## Setup (produção)\n1. Importe `production.postman_environment.json`\n2. Selecione **TechX Todo - Production**\n3. Auth → Login/Register, depois Tasks\n\n## Endpoints\n- Health\n- Auth (register, login)\n- Tasks (CRUD, toggle, metadata MongoDB)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

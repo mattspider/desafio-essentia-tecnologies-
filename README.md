@@ -1,9 +1,21 @@
 # TechX To-Do List
 
-> Aplicação full-stack de gerenciamento de tarefas - Desafio Técnico Essentia Technologies.
+> Aplicação full-stack de gerenciamento de tarefas — **Desafio Técnico Essentia Technologies** (TechX).
+
+Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histórico de alterações. Backend em camadas com JWT, MySQL (Prisma) e metadados no MongoDB (Mongoose). Frontend Angular 19 com Material, tema claro/escuro e deploy na Vercel.
+
+![Dashboard — tema claro](docs/screenshots/app-dashboard-light.png)
+
+| | |
+|---|---|
+| **Repositório** | [github.com/mattspider/desafio-essentia-tecnologies-](https://github.com/mattspider/desafio-essentia-tecnologies-) |
+| **API (produção)** | [desafio-essentia-tecnologies-production.up.railway.app/api](https://desafio-essentia-tecnologies-production.up.railway.app/api) |
+| **Health check** | […/api/health](https://desafio-essentia-tecnologies-production.up.railway.app/api/health) |
+| **Frontend** | Deploy na Vercel — veja [Deploy](#deploy) |
 
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Testes-Vitest-6E9F18?logo=vitest&logoColor=white)
 ![CI](https://github.com/mattspider/desafio-essentia-tecnologies-/actions/workflows/ci.yml/badge.svg)
@@ -12,125 +24,102 @@
 
 ## Sumário
 
-- [Funcionalidades](#funcionalidades-implementadas)
-- [Decisões Principais](#decisões-principais)
-- [Tecnologias](#tecnologias-utilizadas)
+- [Funcionalidades](#funcionalidades)
+- [Decisões principais](#decisões-principais)
+- [Tecnologias](#tecnologias)
 - [Quick Start](#quick-start)
+- [Entrega do desafio](#entrega-do-desafio)
 - [API](#api)
-- [Banco de Dados](#banco-de-dados)
+- [Banco de dados](#banco-de-dados)
 - [Testes](#testes)
 - [CI/CD](#cicd)
+- [Deploy](#deploy)
 - [Postman](#postman)
 - [Docker](#docker)
-- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
 - [Arquitetura](#arquitetura)
+- [Documentação adicional](#documentação-adicional)
 
 ---
 
-## Funcionalidades Implementadas
+## Funcionalidades
 
 ### Autenticação
 
-- Registro de novas contas com senha criptografada (bcrypt)
-- Login com geração de token JWT
-- Rotas protegidas — cada usuário só acessa suas próprias tarefas
+- Registro com senha criptografada (bcrypt)
+- Login com JWT (7 dias, configurável)
+- Rotas protegidas — cada usuário acessa apenas suas tarefas
 
-### Gerenciamento de Tarefas
+### Tarefas (MySQL)
 
-- **Criar** — adicionar novas tarefas
-- **Listar** — visualizar tarefas do usuário logado
-- **Consultar** — buscar tarefa por ID
-- **Atualizar** — editar título, descrição e status
-- **Marcar como concluída** — alternar entre pendente e concluída
-- **Deletar** — remover tarefa
+- Criar, listar, consultar, atualizar e excluir
+- Alternar status pendente / concluída (`PATCH /toggle`)
+- Validação de ownership em todas as operações
 
-### Metadados (MongoDB)
+### Metadados (MongoDB — desafio extra)
 
-- Tags, prioridade (`low` | `medium` | `high`) e notas por tarefa
-- Histórico de ações (criação, conclusão, atualizações)
+- Tags, prioridade (`low` | `medium` | `high`) e notas
+- Histórico de ações (`task_created`, `metadata_updated`, etc.)
+- Painel expansível no frontend com formulário integrado
 
-### Infraestrutura e Qualidade
+### Frontend (Angular)
+
+- Telas de login e cadastro (layout split, validação reativa)
+- Dashboard com cards de estatísticas (total, pendentes, concluídas)
+- Lista de tarefas com badges de status, prioridade e tags
+- Tema claro / escuro persistente
+- Integração HTTP com interceptor JWT e guards de rota
+
+### Qualidade e DevOps
 
 - Docker Compose (MySQL + MongoDB + API)
-- Testes unitários com Vitest (services mockados)
-- GitHub Actions — lint, testes e build (backend + frontend)
-- Collection Postman para testar a API
+- Testes unitários backend (Vitest) e frontend (Karma)
+- GitHub Actions — lint, testes e build em cada PR
+- Collection Postman (local + produção)
 
 ---
 
-## Decisões Principais
+## Decisões principais
 
-As escolhas abaixo orientam o desenho do backend. Detalhes de SOLID, patterns e camadas estão em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Resumo das escolhas arquiteturais. Detalhes de SOLID, patterns e camadas: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-### MySQL + MongoDB (dual database)
-
-**Problema:** tarefas exigem dados estruturados (usuário, título, status, FK) e, ao mesmo tempo, metadados flexíveis (tags, prioridade, histórico de ações).
-
-**Escolha:** MySQL com Prisma para `User` e `Task`; MongoDB com Mongoose para `task_metadata`, referenciado pelo `taskId`.
-
-**Trade-off:** mais infraestrutura para operar, mas cada banco resolve o que faz melhor — sem forçar arrays de histórico ou schema evolutivo no relacional.
-
-### Camadas + interfaces + TSyringe
-
-**Problema:** misturar HTTP, regra de negócio e SQL no mesmo lugar dificulta manutenção e testes.
-
-**Escolha:** `Controller → Service → Repository`, com interfaces (`ITaskRepository`, `IAuthService`, etc.) e injeção via TSyringe.
-
-**Trade-off:** mais arquivos e boilerplate do que um CRUD monolítico, porém cada camada tem responsabilidade clara e implementações podem ser trocadas ou mockadas.
-
-### Regras de negócio no Service
-
-**Problema:** garantir que um usuário só acesse suas próprias tarefas em todas as operações.
-
-**Escolha:** centralizar ownership e orquestração no `TaskService` (ex.: `assertTaskOwnership`, histórico ao criar/concluir tarefa). Controllers ficam finos — recebem HTTP, delegam e respondem.
-
-**Trade-off:** services um pouco mais verbosos, mas a regra vive em um único lugar, independente de Prisma, Mongoose ou formato da API.
-
-### JWT stateless
-
-**Problema:** autenticar uma SPA Angular sem manter sessão no servidor.
-
-**Escolha:** login gera JWT assinado; middleware valida o token em rotas protegidas.
-
-**Trade-off:** simplicidade e escalabilidade horizontal, em troca de revogação imediata de token e refresh flow mais elaborados (não implementados neste escopo).
-
-### Testes unitários nos Services
-
-**Problema:** testar a API inteira com banco real é lento e frágil para CI.
-
-**Escolha:** Vitest nos services com repositórios mockados — foco em regras de negócio (auth, ownership, toggle, metadata).
-
-**Trade-off:** não cobre integração HTTP/banco de ponta a ponta; isso fica para testes E2E ou Postman manual.
+| Tema | Escolha | Motivo |
+|------|---------|--------|
+| **Dual DB** | MySQL (User/Task) + MongoDB (metadata) | Dados estruturados + metadados flexíveis sem forçar schema relacional |
+| **Camadas** | Controller → Service → Repository + interfaces | SRP, testabilidade, DIP com TSyringe |
+| **Regras de negócio** | Centralizadas no Service (`assertTaskOwnership`, histórico) | Controllers finos; ownership em um único lugar |
+| **Auth** | JWT stateless | Adequado à SPA; sem sessão no servidor |
+| **Testes** | Vitest com mocks de interface | CI rápido; foco em regras de negócio |
+| **Deploy** | Vercel (FE) + Railway/Docker (API) | Express + MySQL não rodam bem como serverless na Vercel |
 
 ---
 
-## Tecnologias Utilizadas
+## Tecnologias
 
 ### Backend
 
-| Camada | Tecnologias |
-|--------|-------------|
+| Camada | Stack |
+|--------|-------|
 | Runtime | Node.js 20+, TypeScript |
-| API | Express 5, Zod (validação) |
-| Arquitetura | TSyringe (DI), Controller → Service → Repository |
-| Banco relacional | MySQL 8, Prisma ORM |
-| Banco documento | MongoDB 7, Mongoose |
+| API | Express 5, Zod |
+| Arquitetura | TSyringe, Controller → Service → Repository |
+| SQL | MySQL 8, Prisma |
+| NoSQL | MongoDB 7, Mongoose |
 | Auth | JWT + bcrypt |
 | Testes | Vitest |
 
 ### Frontend
 
-| Camada | Tecnologias |
-|--------|-------------|
+| Camada | Stack |
+|--------|-------|
 | SPA | Angular 19, Angular Material, TypeScript |
 | HTTP | HttpClient + interceptor JWT |
-| Auth | Guards, localStorage, reactive forms |
+| Auth | Guards, localStorage, Reactive Forms |
+| UI | SCSS design tokens, tema claro/escuro |
 
-### Ambiente
+### Infra
 
-- Docker e Docker Compose
-- GitHub Actions (CI do backend)
-- Vercel (deploy do frontend Angular)
+- Docker Compose · GitHub Actions · Vercel · Railway
 
 ---
 
@@ -139,13 +128,13 @@ As escolhas abaixo orientam o desenho do backend. Detalhes de SOLID, patterns e 
 ### Pré-requisitos
 
 - [Docker](https://www.docker.com/) e Docker Compose
-- Node.js 20+ e npm 10+ *(apenas para modo desenvolvimento local)*
+- Node.js 20+ e npm 10+ *(desenvolvimento local sem Docker)*
 
 ### Rodar com Docker (recomendado)
 
 ```bash
-git clone <url-do-repositorio>
-cd desafio-essentia
+git clone https://github.com/mattspider/desafio-essentia-tecnologies-.git
+cd desafio-essentia-tecnologies-
 
 # Linux / macOS / Git Bash
 cp backend/.env.example backend/.env
@@ -156,49 +145,38 @@ Copy-Item backend\.env.example backend\.env
 docker compose up -d --build
 ```
 
-Aguarde os containers subirem e verifique:
+Verifique a API:
 
 ```bash
 curl http://localhost:3000/api/health
 ```
 
-Resposta esperada:
-
-```json
-{
-  "status": "ok",
-  "services": { "mysql": "connected", "mongo": "connected" }
-}
-```
-
 | Serviço | URL |
 |---------|-----|
 | API | http://localhost:3000/api |
-| Health check | http://localhost:3000/api/health |
+| Health | http://localhost:3000/api/health |
 | Frontend (dev) | http://localhost:4200 |
 
 ### Frontend (desenvolvimento)
 
-Com a API rodando (Docker ou `npm run dev` no backend):
+Com a API rodando:
 
 ```bash
-cp frontend/.env.example frontend/.env   # API_URL=http://localhost:3000/api
 cd frontend
 npm install
 npm start
 ```
 
-Abra http://localhost:4200 — cadastre-se ou entre e gerencie tarefas.
+Abra http://localhost:4200. O dev server usa `environment.development.ts` (`http://localhost:3000/api`) — não precisa de `frontend/.env` para `ng serve`.
 
-### Modo desenvolvimento (API fora do Docker)
-
-Útil para hot reload durante o desenvolvimento:
+### API fora do Docker (hot reload)
 
 ```bash
 docker compose up -d mysql mongo
 
 cd backend
 npm install
+cp .env.example .env   # se ainda não existir
 npm run db:migrate:deploy
 npm run dev
 ```
@@ -207,38 +185,72 @@ npm run dev
 
 ---
 
+## Entrega do desafio
+
+### O que foi entregue
+
+| Requisito | Status |
+|-----------|--------|
+| API REST Node.js + TypeScript | ✅ |
+| CRUD de tarefas + marcar concluída | ✅ |
+| MySQL (dados principais) | ✅ |
+| JWT + autenticação | ✅ |
+| MongoDB (metadados extras) | ✅ |
+| Frontend Angular 14+ | ✅ (Angular 19) |
+| Docker + README com setup | ✅ |
+| Commits incrementais + CI | ✅ |
+| Deploy (API + FE) | ✅ API Railway · FE Vercel |
+
+### Como avaliar rapidamente
+
+1. **Online:** acesse a API em [health](https://desafio-essentia-tecnologies-production.up.railway.app/api/health) e o frontend na URL da Vercel (após deploy).
+2. **Local:** `docker compose up -d --build` → `cd frontend && npm start` → cadastre usuário → crie tarefa → expanda painel → salve prioridade/tags.
+3. **API:** importe a [collection Postman](#postman) e rode Auth → Tasks.
+4. **Testes:** `cd backend && npm test` e `cd frontend && npm run test:ci`.
+
+### Repositório
+
+```bash
+git clone https://github.com/mattspider/desafio-essentia-tecnologies-.git
+```
+
+Branch principal: `main`.
+
+---
+
 ## API
 
-Base URL: `http://localhost:3000/api`
+Base URL local: `http://localhost:3000/api`  
+Base URL produção: `https://desafio-essentia-tecnologies-production.up.railway.app/api`
 
-### Endpoints públicos
+### Públicos
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/health` | Status da API e conexão com MySQL/MongoDB |
+| `GET` | `/health` | Status + conexão MySQL/MongoDB |
 | `POST` | `/auth/register` | Cadastro (`name`, `email`, `password`) |
-| `POST` | `/auth/login` | Login (`email`, `password`) → retorna JWT |
+| `POST` | `/auth/login` | Login → `{ token, user }` |
 
-### Endpoints protegidos
+### Protegidos
 
-Requer header: `Authorization: Bearer <token>`
+Header: `Authorization: Bearer <token>`
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/tasks` | Lista tarefas do usuário |
-| `POST` | `/tasks` | Cria tarefa (`title`, `description?`) |
-| `GET` | `/tasks/:id` | Busca tarefa por ID |
-| `PUT` | `/tasks/:id` | Atualiza tarefa |
+| `POST` | `/tasks` | Cria (`title`, `description?`) |
+| `GET` | `/tasks/:id` | Detalhe |
+| `PUT` | `/tasks/:id` | Atualiza |
 | `PATCH` | `/tasks/:id/toggle` | Alterna concluída/pendente |
-| `DELETE` | `/tasks/:id` | Remove tarefa |
-| `GET` | `/tasks/:id/metadata` | Metadados da tarefa (MongoDB) |
-| `PUT` | `/tasks/:id/metadata` | Cria/atualiza metadados (`tags`, `priority`, `notes`) |
+| `DELETE` | `/tasks/:id` | Remove (+ metadata no Mongo) |
+| `GET` | `/tasks/:id/metadata` | Metadados |
+| `PUT` | `/tasks/:id/metadata` | Upsert (`tags`, `priority`, `notes`) |
 
 ---
 
-## Banco de Dados
+## Banco de dados
 
-### MySQL (Prisma) — dados principais
+### MySQL (Prisma)
 
 ```mermaid
 erDiagram
@@ -262,32 +274,28 @@ erDiagram
     }
 ```
 
-### MongoDB (Mongoose) — metadados por tarefa
-
-Documento na collection `task_metadata`, referenciado pelo `taskId` do MySQL:
+### MongoDB — `task_metadata`
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
-| `taskId` | number | ID da tarefa no MySQL (único) |
-| `userId` | number | Dono da tarefa |
+| `taskId` | number | FK lógica (MySQL), único |
+| `userId` | number | Dono |
 | `tags` | string[] | Etiquetas |
 | `priority` | enum | `low`, `medium`, `high` |
 | `notes` | string | Observações |
-| `history` | array | Log de ações (`action`, `at`) |
-
-### Arquitetura de persistência
+| `history` | array | `{ action, at }` |
 
 ```mermaid
 flowchart LR
-    API[Express API] --> MySQL[(MySQL\nUser + Task)]
-    API --> Mongo[(MongoDB\nTask Metadata)]
+    API[Express API] --> MySQL[(MySQL)]
+    API --> Mongo[(MongoDB)]
 ```
 
 ---
 
 ## Testes
 
-Testes unitários dos services com repositórios mockados (sem banco real):
+### Backend (Vitest)
 
 ```bash
 cd backend
@@ -296,157 +304,184 @@ npm test
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm test` | Executa todos os testes |
-| `npm run test:watch` | Modo watch |
-| `npm run test:coverage` | Relatório de cobertura |
+| `npm test` | Todos os testes |
+| `npm run test:watch` | Watch mode |
+| `npm run test:coverage` | Cobertura |
 
-Cobertura atual: `AuthService` e `TaskService`.
+Cobertura: `AuthService`, `TaskService` (repositórios mockados).
+
+### Frontend (Karma)
+
+```bash
+cd frontend
+npm run test:ci
+```
 
 ---
 
 ## CI/CD
 
-### GitHub Actions
+Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — push e PR na `main`.
 
-Workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — dispara em **push** e **pull request** na branch `main`:
+**Backend:** lint → test (Vitest) → build (Prisma + tsc)  
+**Frontend:** test:ci (Karma headless) → build:ci
 
-**Backend**
+O CI usa `backend/.env.example`. O frontend gera `environment.production.ts` via `API_URL` (padrão localhost).
 
-| Etapa | Comando | Descrição |
-|-------|---------|-----------|
-| Lint | `npm run lint` | ESLint |
-| Test | `npm test` | Vitest (22 testes) |
-| Build | `npm run build` | Prisma + TypeScript |
+---
 
-**Frontend**
+## Deploy
 
-| Etapa | Comando | Descrição |
-|-------|---------|-----------|
-| Test | `npm run test:ci` | Karma + ChromeHeadless |
-| Build | `npm run build:ci` | Angular production build |
+Guia completo: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
-O backend usa `backend/.env.example` no CI. O frontend gera `environment.production.ts` a partir de `API_URL` (padrão: localhost).
+### Resumo
 
-### Vercel (frontend)
+| Alvo | Plataforma | Configuração chave |
+|------|------------|-------------------|
+| Frontend | **Vercel** | Root: `frontend` · `API_URL=https://…/api` |
+| API | **Railway** (ou Docker) | `DATABASE_URL`, `MONGODB_URI`, `JWT_SECRET`, `CORS_ORIGIN` |
 
-Configuração em [`frontend/vercel.json`](frontend/vercel.json):
+**CORS:** `CORS_ORIGIN` no backend deve ser a URL **exata** do frontend (copie do botão Visit na Vercel).
 
-1. Importe o repositório em [vercel.com](https://vercel.com)
-2. **Root Directory:** `frontend`
-3. **Environment Variable (Production):** `API_URL` = URL pública da API (ex.: `https://sua-api.com/api`)
-4. O script `scripts/generate-env.js` roda no `prebuild` e injeta `API_URL` em `environment.production.ts`
+**Build Docker:** o `backend/Dockerfile` compila com `npx tsc` (sem exigir `.env` no build).
 
-Configure também `CORS_ORIGIN` no **backend** de produção com a URL do Vercel (ex.: `https://seu-app.vercel.app`).
+### Variáveis Vercel (Production)
 
-### Deploy da API (produção)
-
-```bash
-docker compose up -d --build
+```env
+API_URL=https://desafio-essentia-tecnologies-production.up.railway.app/api
 ```
 
-Ou publique a imagem `backend/Dockerfile` em um serviço containerizado com MySQL e MongoDB gerenciados.
+### Variáveis Railway (backend)
+
+```env
+DATABASE_URL=${{MySQL.MYSQL_URL}}
+MONGODB_URI=${{MongoDB.MONGO_URL}}
+JWT_SECRET=<segredo-forte>
+NODE_ENV=production
+CORS_ORIGIN=https://<seu-app>.vercel.app
+```
 
 ---
 
 ## Postman
 
-Importe os arquivos em `postman/`:
+Arquivos em `postman/`:
 
-1. `TechX-Todo-API.postman_collection.json`
-2. `local.postman_environment.json`
+| Arquivo | Uso |
+|---------|-----|
+| `TechX-Todo-API.postman_collection.json` | Todos os endpoints |
+| `local.postman_environment.json` | `http://localhost:3000` |
+| `production.postman_environment.json` | API Railway |
 
-Fluxo sugerido:
+Fluxo:
 
-1. **Auth → Register** ou **Login** *(salva o token automaticamente)*
+1. **Auth → Register** ou **Login** *(token salvo automaticamente)*
 2. **Tasks → Create Task**
-3. **Tasks → Get Metadata** / **Upsert Metadata**
+3. **Tasks → Upsert Metadata** / **Get Metadata**
 
 ---
 
 ## Docker
 
-| Serviço | Imagem | Porta | Credenciais |
-|---------|--------|-------|-------------|
-| MySQL | `mysql:8` | 3306 | user: `techx` · senha: `techx123` · db: `techx_todo` |
-| MongoDB | `mongo:7` | 27017 | sem auth (dev) |
-| Backend | `backend/Dockerfile` | 3000 | Prisma migrate + API |
-
-Comandos úteis:
+| Serviço | Imagem | Porta | Credenciais (dev) |
+|---------|--------|-------|-------------------|
+| MySQL | `mysql:8` | 3306 | `techx` / `techx123` / `techx_todo` |
+| MongoDB | `mongo:7` | 27017 | sem auth |
+| Backend | `backend/Dockerfile` | 3000 | migrate + API |
 
 ```bash
 docker compose up -d --build      # stack completa
-docker compose up -d mysql mongo    # somente bancos
-docker compose ps                   # status
-docker compose logs -f backend      # logs da API
-docker compose down                 # parar
-docker compose down -v              # parar e remover volumes
+docker compose up -d mysql mongo  # só bancos
+docker compose logs -f backend
+docker compose down -v            # parar + remover volumes
 ```
-
-No Docker, o Compose carrega `backend/.env` e **sobrescreve** `DATABASE_URL` e `MONGODB_URI` para os hosts internos `mysql` e `mongo`.
 
 <details>
 <summary><strong>Scripts do backend</strong></summary>
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Servidor com hot reload |
-| `npm run build` | Compila TypeScript |
-| `npm run start` | Produção (`dist/`) |
+| `npm run dev` | Hot reload |
+| `npm run build` | Prisma generate + tsc |
+| `npm run start` | Produção |
 | `npm run lint` | ESLint |
-| `npm run format` | Prettier |
 | `npm run db:migrate` | Migrations (dev) |
-| `npm run db:migrate:deploy` | Migrations (prod/CI) |
+| `npm run db:migrate:deploy` | Migrations (prod) |
 | `npm run db:studio` | Prisma Studio |
 
 </details>
 
 ---
 
-## Variáveis de Ambiente
+## Variáveis de ambiente
 
 | Arquivo | Uso |
 |---------|-----|
-| `backend/.env` | Segredos e infra: MySQL, MongoDB, JWT, porta, CORS |
-| `frontend/.env` | `API_URL` para build de produção local (via `prebuild`) |
+| `backend/.env` | MySQL, MongoDB, JWT, porta, CORS |
+| `frontend/.env` | `API_URL` apenas para **build de produção** local |
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-> Nunca coloque `JWT_SECRET` ou credenciais de banco no `frontend/.env` — variáveis do Angular ficam expostas no build.
+| Variável (backend) | Descrição |
+|--------------------|-----------|
+| `DATABASE_URL` | Connection string MySQL |
+| `MONGODB_URI` | Connection string MongoDB |
+| `JWT_SECRET` | Segredo de assinatura |
+| `JWT_EXPIRES_IN` | Expiração do token (ex.: `7d`) |
+| `PORT` | Porta HTTP (padrão `3000`) |
+| `CORS_ORIGIN` | Origem permitida (uma URL) |
+
+| Variável (frontend) | Descrição |
+|---------------------|-----------|
+| `API_URL` | Base da API com `/api` (Vercel/CI) |
+
+> Nunca coloque `JWT_SECRET` no frontend — variáveis Angular ficam expostas no bundle.
 
 ---
 
 ## Arquitetura
 
-Fluxo de uma requisição:
-
 ```
-HTTP Request → Controller → Service → Repository → MySQL / MongoDB
+HTTP → Controller → Service → Repository → MySQL / MongoDB
 ```
 
-Validação de entrada com **Zod** nos DTOs; erros de domínio mapeados por middleware global.
+- Validação: **Zod** nos DTOs
+- Erros de domínio: middleware global
+- DI: **TSyringe** em `backend/src/container/`
 
-Documentação completa (SOLID, patterns, camadas): [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-
-### Estrutura do projeto
+### Estrutura do monorepo
 
 ```
 .
-├── .github/workflows/  # CI (GitHub Actions)
-├── backend/          # API REST (Express + TypeScript)
-│   ├── prisma/       # Schema e migrations MySQL
-│   ├── src/          # Controllers, services, repositories
-│   └── tests/        # Testes unitários (Vitest)
-├── frontend/         # SPA Angular + Material
-│   ├── src/app/      # features (auth, tasks), core (services, guards)
-│   └── vercel.json   # Config de deploy Vercel
-├── docs/             # Documentação de arquitetura
-├── postman/          # Collection para testes da API
+├── .github/workflows/     # CI
+├── backend/               # API Express + TypeScript
+│   ├── prisma/            # Schema e migrations
+│   ├── src/               # Camadas + infra
+│   └── tests/             # Vitest
+├── frontend/              # Angular 19 + Material
+│   ├── src/app/
+│   │   ├── core/          # Auth, guards, theme
+│   │   ├── features/      # auth, tasks
+│   │   └── shared/
+│   └── vercel.json
+├── docs/                  # Arquitetura, deploy, screenshots
+├── postman/
 └── docker-compose.yml
 ```
 
 ---
 
-Desenvolvido por **Matheus de Oliveira Soares**
+## Documentação adicional
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | SOLID, patterns, fluxo de requisição, pastas |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Railway, Vercel, CORS, checklist |
+| [frontend/README.md](frontend/README.md) | Scripts e env do Angular |
+
+---
+
+Desenvolvido por **Matheus de Oliveira Soares** — Desafio Essentia Technologies / TechX.

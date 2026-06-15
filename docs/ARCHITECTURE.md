@@ -150,15 +150,18 @@ backend/src/
 
 ## Frontend
 
-O frontend Angular seguirá organização por **features** com separação `core/`, `features/` e `shared/`:
+O frontend Angular usa organização por **features** com `core/`, `features/` e `shared/`:
 
 | Pasta | Responsabilidade |
 |-------|------------------|
-| `core/` | Auth, interceptors, guards — singletons da aplicação |
-| `features/` | Módulos de negócio (auth, tasks) |
-| `shared/` | Componentes, pipes e models reutilizáveis |
+| `core/` | Auth, interceptors, guards, `ThemeService` |
+| `features/auth/` | Login e cadastro (Reactive Forms, layout split) |
+| `features/tasks/` | Lista, CRUD, metadados, histórico |
+| `shared/` | Componentes reutilizáveis (`ThemeToggle`) |
 
-Padrão **Smart/Dumb Components**: containers (smart) orquestram estado e chamam services; componentes filhos (dumb) recebem `@Input`/`@Output` e não conhecem a API diretamente.
+**Padrão Smart/Dumb:** `TaskListComponent` (smart) orquestra estado e API; formulários e badges recebem dados via bindings.
+
+**UI:** design tokens CSS (`_tokens.scss`), tema claro/escuro, Angular Material (azure-blue), layout em duas colunas com cards de estatísticas.
 
 ---
 
@@ -173,6 +176,8 @@ Padrão **Smart/Dumb Components**: containers (smart) orquestram estado e chamam
 | Validação | Zod | Schemas declarativos, inferência de tipos |
 | Auth | JWT + bcrypt | Desafio extra, stateless, padrão de mercado |
 | UI | Angular Material | Componentes maduros, acessibilidade, produtividade |
+
+Deploy e variáveis de produção: [DEPLOY.md](DEPLOY.md).
 
 ---
 
