@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { getApiErrorMessage } from '../../../core/utils/api-error.util';
 
@@ -24,6 +25,7 @@ import { getApiErrorMessage } from '../../../core/utils/api-error.util';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    ThemeToggleComponent,
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',

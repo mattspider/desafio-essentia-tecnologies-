@@ -1,4 +1,66 @@
-/* You can add global styles to this file, and also import other style files */
+@use './styles/tokens';
+@use './styles/auth';
+@use './styles/material-overrides';
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--tx-font);
+  color: var(--tx-text);
+  background: var(--tx-bg);
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.mat-mdc-card {
+  border-radius: var(--tx-radius-md) !important;
+  box-shadow: var(--tx-shadow-md) !important;
+  border: 1px solid var(--tx-border);
+  background: var(--tx-surface) !important;
+  color: var(--tx-text);
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-expansion-panel {
+  background: var(--tx-surface) !important;
+  color: var(--tx-text);
+  border: 1px solid var(--tx-border) !important;
+  box-shadow: var(--tx-shadow-sm) !important;
+}
+
+.mat-expansion-panel-header {
+  background: var(--tx-surface) !important;
+}
+
+.mat-expansion-panel-body {
+  background: var(--tx-surface-muted);
+}
+
+.mat-expansion-panel-header-title,
+.mat-expansion-panel-header-description {
+  color: var(--tx-text) !important;
+}
+
+.mat-expansion-panel-header-description {
+  color: var(--tx-text-muted) !important;
+}
+
+.mat-mdc-snack-bar-container {
+  &.success-snackbar {
+    --mdc-snackbar-container-color: var(--tx-success);
+    --mat-snack-bar-button-color: #fff;
+  }
+}

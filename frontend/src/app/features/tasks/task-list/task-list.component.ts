@@ -13,7 +13,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { TaskService } from '../../../core/services/task.service';
 import { Task, TaskMetadata, TaskPriority } from '../../../core/models/task.model';
@@ -23,6 +25,7 @@ interface TaskViewModel extends Task {
   metadata?: TaskMetadata | null;
   metadataLoading?: boolean;
   metadataError?: string | null;
+  metadataFetched?: boolean;
 }
 
 @Component({
@@ -31,8 +34,10 @@ interface TaskViewModel extends Task {
   imports: [
     DatePipe,
     ReactiveFormsModule,
-    MatToolbarModule,
     MatCardModule,
+    MatTooltipModule,
+    MatButtonToggleModule,
+    ThemeToggleComponent,
     MatButtonModule,
     MatIconModule,
     MatListModule,
@@ -56,6 +61,14 @@ export class TaskListComponent implements OnInit {
 
   readonly user = this.authService.user;
   readonly priorities: TaskPriority[] = ['low', 'medium', 'high'];
+
+  get pendingCount(): number {
+    return this.tasks.filter((task) => !task.completed).length;
+  }
+
+  get completedCount(): number {
+    return this.tasks.filter((task) => task.completed).length;
+  }
 
   tasks: TaskViewModel[] = [];
   loading = true;
@@ -87,7 +100,12 @@ export class TaskListComponent implements OnInit {
 
     this.taskService.list().subscribe({
       next: (tasks) => {
-        this.tasks = tasks.map((task) => ({ ...task, metadata: null }));
+        this.tasks = tasks.map((task) => ({
+          ...task,
+          metadata: null,
+          metadataFetched: false,
+        }));
+        this.metadataForms.clear();
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -115,7 +133,7 @@ export class TaskListComponent implements OnInit {
       })
       .subscribe({
         next: (task) => {
-          this.tasks = [{ ...task, metadata: null }, ...this.tasks];
+          this.tasks = [{ ...task, metadata: null, metadataFetched: false }, ...this.tasks];
           this.createForm.reset();
           this.creating = false;
           this.snackBar.open('Tarefa criada.', 'Fechar', { duration: 2500 });
@@ -205,7 +223,9 @@ export class TaskListComponent implements OnInit {
   }
 
   onPanelOpened(task: TaskViewModel): void {
-    if (task.metadata || task.metadataLoading) {
+    this.syncMetadataForm(task.id, this.defaultMetadata(task));
+
+    if (task.metadataFetched || task.metadataLoading) {
       return;
     }
 
@@ -215,20 +235,15 @@ export class TaskListComponent implements OnInit {
     this.taskService.getMetadata(task.id).subscribe({
       next: (metadata) => {
         task.metadata = metadata;
+        task.metadataFetched = true;
         task.metadataLoading = false;
-        this.ensureMetadataForm(task.id, metadata);
+        this.syncMetadataForm(task.id, metadata);
       },
       error: (error: unknown) => {
         task.metadataLoading = false;
+        task.metadataFetched = true;
         task.metadataError = getApiErrorMessage(error, 'Metadados indisponíveis.');
-        this.ensureMetadataForm(task.id, {
-          taskId: task.id,
-          userId: task.userId,
-          tags: [],
-          priority: 'medium',
-          notes: '',
-          history: [],
-        });
+        this.syncMetadataForm(task.id, this.defaultMetadata(task));
       },
     });
   }
@@ -258,7 +273,8 @@ export class TaskListComponent implements OnInit {
     this.taskService.upsertMetadata(task.id, { priority, notes, tags }).subscribe({
       next: (metadata) => {
         task.metadata = metadata;
-        this.ensureMetadataForm(task.id, metadata);
+        task.metadataFetched = true;
+        this.syncMetadataForm(task.id, metadata);
         this.snackBar.open('Metadados salvos.', 'Fechar', { duration: 2500 });
       },
       error: (error: unknown) => {
@@ -267,6 +283,39 @@ export class TaskListComponent implements OnInit {
         });
       },
     });
+  }
+
+  userInitials(name: string): string {
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('');
+  }
+
+  statusLabel(completed: boolean): string {
+    return completed ? 'Concluída' : 'Pendente';
+  }
+
+  displayPriority(task: TaskViewModel): TaskPriority {
+    return task.metadata?.priority ?? this.getMetadataForm(task.id)?.get('priority')?.value ?? 'medium';
+  }
+
+  displayTags(task: TaskViewModel): string[] {
+    if (task.metadata?.tags?.length) {
+      return task.metadata.tags;
+    }
+
+    const tagsInput = this.getMetadataForm(task.id)?.get('tagsInput')?.value as string | undefined;
+    if (!tagsInput?.trim()) {
+      return [];
+    }
+
+    return tagsInput
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
   }
 
   priorityLabel(priority: TaskPriority): string {
@@ -278,8 +327,26 @@ export class TaskListComponent implements OnInit {
     return labels[priority];
   }
 
-  private ensureMetadataForm(taskId: number, metadata: TaskMetadata): void {
-    if (this.metadataForms.has(taskId)) {
+  private defaultMetadata(task: TaskViewModel): TaskMetadata {
+    return {
+      taskId: task.id,
+      userId: task.userId,
+      tags: [],
+      priority: 'medium',
+      notes: '',
+      history: [],
+    };
+  }
+
+  private syncMetadataForm(taskId: number, metadata: TaskMetadata): void {
+    const existing = this.metadataForms.get(taskId);
+
+    if (existing) {
+      existing.patchValue({
+        priority: metadata.priority,
+        notes: metadata.notes,
+        tagsInput: metadata.tags.join(', '),
+      });
       return;
     }
 

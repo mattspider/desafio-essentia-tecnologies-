@@ -1,0 +1,128 @@
+// Alinha componentes Material à paleta TechX (melhor contraste que magenta-violet)
+
+:root,
+[data-theme='light'] {
+  --mat-sys-primary: #4f46e5;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e0e7ff;
+  --mat-sys-on-primary-container: #312e81;
+
+  --mat-sys-on-surface: #0f172a;
+  --mat-sys-on-surface-variant: #475569;
+
+  --mat-list-list-item-label-text-color: var(--tx-text);
+  --mat-list-list-item-supporting-text-color: var(--tx-text-muted);
+  --mat-list-list-item-leading-icon-color: var(--tx-text-muted);
+}
+
+[data-theme='dark'] {
+  --mat-sys-primary: #818cf8;
+  --mat-sys-on-primary: #0f172a;
+  --mat-sys-primary-container: #312e81;
+  --mat-sys-on-primary-container: #e0e7ff;
+}
+
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+  --mdc-filled-button-container-color: var(--tx-primary);
+  --mdc-filled-button-label-text-color: #ffffff;
+}
+
+.mat-mdc-outlined-button.mat-primary {
+  --mdc-outlined-button-label-text-color: var(--tx-primary-dark);
+  --mdc-outlined-button-outline-color: var(--tx-primary);
+}
+
+.mat-mdc-button.mat-primary {
+  --mdc-text-button-label-text-color: var(--tx-primary-dark);
+}
+
+.mat-mdc-outlined-button.mat-warn {
+  --mdc-outlined-button-label-text-color: var(--tx-danger);
+  --mdc-outlined-button-outline-color: rgba(220, 38, 38, 0.45);
+}
+
+.mat-button-toggle-group {
+  border-color: var(--tx-border-strong) !important;
+}
+
+.mat-button-toggle {
+  color: var(--tx-text) !important;
+  background: var(--tx-surface) !important;
+}
+
+.mat-button-toggle-checked {
+  background: var(--tx-primary) !important;
+  color: #ffffff !important;
+}
+
+.mat-button-toggle-checked .mat-button-toggle-button {
+  color: #ffffff !important;
+}
+
+.mat-expansion-panel-header {
+  .mat-expansion-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: 0.5rem;
+    border-radius: 8px;
+    background: var(--tx-surface-muted);
+    border: 1px solid var(--tx-border-strong);
+    transform: none !important;
+  }
+
+  .mat-expansion-indicator::after {
+    padding: 5px;
+    border-width: 0 2.5px 2.5px 0;
+    border-color: var(--tx-text);
+    opacity: 1;
+  }
+
+  &.mat-expanded .mat-expansion-indicator::after {
+    margin-top: 4px;
+  }
+}
+
+[data-theme='dark'] {
+  .mat-expansion-panel-header .mat-expansion-indicator::after {
+    border-color: var(--tx-text);
+  }
+}
+
+[data-theme='light'] {
+  .mat-mdc-form-field {
+    --mat-form-field-subscript-text-color: var(--tx-text-muted);
+    --mat-form-field-leading-icon-color: var(--tx-text-muted);
+    --mat-form-field-trailing-icon-color: var(--tx-text-muted);
+  }
+
+  .mat-mdc-form-field .mdc-text-field__input::placeholder {
+    color: var(--tx-text-muted);
+    opacity: 1;
+  }
+
+  .mat-mdc-form-field-hint,
+  .mat-mdc-form-field .mat-mdc-form-field-hint {
+    color: var(--tx-text-muted);
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-title,
+  .mat-mdc-list-item .mdc-list-item__primary-text {
+    color: var(--tx-text) !important;
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-line,
+  .mat-mdc-list-item .mdc-list-item__secondary-text {
+    color: var(--tx-text-muted) !important;
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-icon,
+  .mat-mdc-list-item [matListItemIcon] {
+    color: var(--tx-text-muted) !important;
+  }
+}
