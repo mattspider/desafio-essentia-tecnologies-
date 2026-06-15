@@ -47,7 +47,7 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 ### Autenticação
 
 - Registro com senha criptografada (bcrypt)
-- Login com JWT (7 dias, configurável)
+- Login com JWT em cookie **HttpOnly** + proteção **CSRF** (double-submit)
 - Rotas protegidas — cada usuário acessa apenas suas tarefas
 
 ### Tarefas (MySQL)
@@ -68,7 +68,7 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 - Dashboard com cards de estatísticas (total, pendentes, concluídas)
 - Lista de tarefas com badges de status, prioridade e tags
 - Tema claro / escuro persistente
-- Integração HTTP com interceptor JWT e guards de rota
+- Integração HTTP com cookies (`withCredentials`), interceptor CSRF e guards de rota
 
 ### Qualidade e DevOps
 
@@ -88,7 +88,7 @@ Resumo das escolhas arquiteturais. Detalhes de SOLID, patterns e camadas: [docs/
 | **Dual DB** | MySQL (User/Task) + MongoDB (metadata) | Dados estruturados + metadados flexíveis sem forçar schema relacional |
 | **Camadas** | Controller → Service → Repository + interfaces | SRP, testabilidade, DIP com TSyringe |
 | **Regras de negócio** | Centralizadas no Service (`assertTaskOwnership`, histórico) | Controllers finos; ownership em um único lugar |
-| **Auth** | JWT stateless | Adequado à SPA; sem sessão no servidor |
+| **Auth** | JWT em cookie HttpOnly + CSRF | Token inacessível ao JS; mutações validadas |
 | **Testes** | Vitest com mocks de interface | CI rápido; foco em regras de negócio |
 | **Deploy** | Vercel (FE) + Railway/Docker (API) | Express + MySQL não rodam bem como serverless na Vercel |
 
@@ -228,12 +228,17 @@ Base URL produção: `https://desafio-essentia-tecnologies-production.up.railway
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `GET` | `/health` | Status + conexão MySQL/MongoDB |
-| `POST` | `/auth/register` | Cadastro (`name`, `email`, `password`) |
-| `POST` | `/auth/login` | Login → `{ token, user }` |
+| `GET` | `/auth/csrf` | Emite token CSRF (cookie + body) |
+| `POST` | `/auth/register` | Cadastro → `{ user, csrfToken }` + cookies |
+| `POST` | `/auth/login` | Login → `{ user, csrfToken }` + cookies |
+| `GET` | `/auth/me` | Usuário autenticado (cookie) |
+| `POST` | `/auth/logout` | Encerra sessão (limpa cookies) |
 
 ### Protegidos
 
-Header: `Authorization: Bearer <token>`
+Cookies de sessão (`techx_access_token`) enviados automaticamente pelo browser. Mutações exigem header `X-CSRF-Token` igual ao cookie `techx_csrf_token`.
+
+Alternativa para Postman/API clients: `Authorization: Bearer <token>` (fallback).
 
 | Método | Rota | Descrição |
 |--------|------|-----------|

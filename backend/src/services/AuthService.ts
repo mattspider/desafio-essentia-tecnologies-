@@ -76,6 +76,16 @@ export class AuthService implements IAuthService {
     return { token, user };
   }
 
+  async getCurrentUser(userId: number): Promise<User> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedError('User not found');
+    }
+
+    return user;
+  }
+
   async validateToken(token: string): Promise<TokenPayload> {
     try {
       const payload = jwt.verify(token, env.jwtSecret()) as TokenPayload;

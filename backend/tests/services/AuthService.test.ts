@@ -124,6 +124,21 @@ describe('AuthService', () => {
     });
   });
 
+  describe('getCurrentUser', () => {
+    it('returns user when id exists', async () => {
+      const user = createUser();
+      vi.mocked(userRepository.findById).mockResolvedValue(user);
+
+      await expect(authService.getCurrentUser(user.id)).resolves.toEqual(user);
+    });
+
+    it('throws UnauthorizedError when user does not exist', async () => {
+      vi.mocked(userRepository.findById).mockResolvedValue(null);
+
+      await expect(authService.getCurrentUser(999)).rejects.toBeInstanceOf(UnauthorizedError);
+    });
+  });
+
   describe('validateToken', () => {
     it('returns payload for a valid token', async () => {
       const user = createUser();

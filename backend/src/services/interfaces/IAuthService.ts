@@ -25,4 +25,5 @@ export interface IAuthService {
   register(input: RegisterInput): Promise<AuthResult>;
   login(input: LoginInput): Promise<AuthResult>;
   validateToken(token: string): Promise<TokenPayload>;
+  getCurrentUser(userId: number): Promise<User>;
 }

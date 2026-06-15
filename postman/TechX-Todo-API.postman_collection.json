@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "techx-todo-api-collection",
     "name": "TechX Todo API",
-    "description": "Collection para testar a API do desafio TechX To-Do List.\n\n## Setup (local)\n1. Importe esta collection e `local.postman_environment.json`\n2. Selecione o environment **TechX Todo - Local**\n3. Suba a stack: `docker compose up -d --build` (ou `npm run dev` no backend)\n4. Execute **Auth → Register** ou **Login** — o token é salvo automaticamente\n5. Use a pasta **Tasks** para CRUD e metadados\n\n## Setup (produção)\n1. Importe `production.postman_environment.json`\n2. Selecione **TechX Todo - Production**\n3. Auth → Login/Register, depois Tasks\n\n## Endpoints\n- Health\n- Auth (register, login)\n- Tasks (CRUD, toggle, metadata MongoDB)",
+    "description": "Collection para testar a API do desafio TechX To-Do List.\n\n## Setup\n1. Importe esta collection e um environment (local ou production)\n2. Execute **Auth → Get CSRF Token** (salva `csrfToken`)\n3. **Auth → Register** ou **Login** (cookies HttpOnly + `csrfToken` no body)\n4. Requests mutáveis enviam header `X-CSRF-Token`\n5. Postman envia cookies automaticamente (Cookie Jar)\n\nAlternativa: Bearer `{{token}}` ainda funciona para testes manuais.\n\n## Endpoints Auth\n- GET /auth/csrf\n- POST /auth/login, /auth/register\n- GET /auth/me\n- POST /auth/logout",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,10 @@
     },
     {
       "key": "token",
+      "value": ""
+    },
+    {
+      "key": "csrfToken",
       "value": ""
     },
     {
@@ -47,6 +51,40 @@
       "name": "Auth",
       "item": [
         {
+          "name": "Get CSRF Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('csrfToken', body.csrfToken);",
+                  "  pm.environment.set('csrfToken', body.csrfToken);",
+                  "}",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns csrfToken', () => {",
+                  "  pm.expect(pm.response.json().csrfToken).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/csrf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "csrf"]
+            },
+            "description": "Obtém token CSRF (cookie + variável para header X-CSRF-Token)."
+          },
+          "response": []
+        },
+        {
           "name": "Register",
           "event": [
             {
@@ -55,16 +93,17 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "  const body = pm.response.json();",
-                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('csrfToken', body.csrfToken);",
                   "  pm.collectionVariables.set('userId', String(body.user.id));",
-                  "  pm.environment.set('token', body.token);",
+                  "  pm.environment.set('csrfToken', body.csrfToken);",
                   "  pm.environment.set('userId', String(body.user.id));",
                   "}",
                   "",
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Returns token', () => {",
+                  "pm.test('Returns user and csrfToken', () => {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.token).to.be.a('string');",
+                  "  pm.expect(body.user).to.be.an('object');",
+                  "  pm.expect(body.csrfToken).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -101,16 +140,17 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const body = pm.response.json();",
-                  "  pm.collectionVariables.set('token', body.token);",
+                  "  pm.collectionVariables.set('csrfToken', body.csrfToken);",
                   "  pm.collectionVariables.set('userId', String(body.user.id));",
-                  "  pm.environment.set('token', body.token);",
+                  "  pm.environment.set('csrfToken', body.csrfToken);",
                   "  pm.environment.set('userId', String(body.user.id));",
                   "}",
                   "",
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Returns token', () => {",
+                  "pm.test('Returns user and csrfToken', () => {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body.token).to.be.a('string');",
+                  "  pm.expect(body.user).to.be.an('object');",
+                  "  pm.expect(body.csrfToken).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -134,7 +174,40 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "login"]
             },
-            "description": "Autentica usuário existente. Retorna JWT."
+            "description": "Autentica usuário existente. Define cookies HttpOnly + csrfToken."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Retorna usuário autenticado (requer cookie de sessão)."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Encerra sessão e limpa cookies."
           },
           "response": []
         },
@@ -164,22 +237,12 @@
       ]
     },
     {
-      "name": "Tasks (Fase 4)",
-      "description": "Endpoints protegidos por JWT. Disponíveis após implementação da Fase 4.",
+      "name": "Tasks",
+      "description": "Endpoints protegidos. Após Login, cookies são enviados automaticamente. Mutações exigem header X-CSRF-Token.",
       "item": [
         {
           "name": "List Tasks",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
@@ -193,21 +256,15 @@
         {
           "name": "Create Task",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
               }
             ],
             "body": {
@@ -225,16 +282,6 @@
         {
           "name": "Get Task by ID",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
@@ -248,21 +295,15 @@
         {
           "name": "Update Task",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
               }
             ],
             "body": {
@@ -280,18 +321,13 @@
         {
           "name": "Toggle Task Completed",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/tasks/{{taskId}}/toggle",
               "host": ["{{baseUrl}}"],
@@ -303,18 +339,13 @@
         {
           "name": "Delete Task",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
               "host": ["{{baseUrl}}"],
@@ -326,16 +357,6 @@
         {
           "name": "Get Task Metadata (MongoDB)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
@@ -350,21 +371,15 @@
         {
           "name": "Upsert Task Metadata (MongoDB)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
               }
             ],
             "body": {

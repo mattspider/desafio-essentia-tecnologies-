@@ -6,9 +6,17 @@ export interface User {
   updatedAt: string;
 }
 
-export interface AuthResponse {
-  token: string;
+export interface SessionResponse {
   user: User;
+  csrfToken: string;
+}
+
+export interface MeResponse {
+  user: User;
+}
+
+export interface CsrfResponse {
+  csrfToken: string;
 }
 
 export interface LoginRequest {

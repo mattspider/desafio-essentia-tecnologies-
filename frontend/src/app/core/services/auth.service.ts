@@ -1,75 +1,120 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  AuthResponse,
+  CsrfResponse,
   LoginRequest,
+  MeResponse,
   RegisterRequest,
+  SessionResponse,
   User,
 } from '../models/user.model';
-
-const TOKEN_KEY = 'techx_token';
-const USER_KEY = 'techx_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  private readonly tokenSignal = signal<string | null>(this.readToken());
-  private readonly userSignal = signal<User | null>(this.readUser());
+  private readonly userSignal = signal<User | null>(null);
+  private csrfToken: string | null = null;
+  private bootstrapDone = false;
 
-  readonly token = this.tokenSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
-  readonly isAuthenticated = computed(() => !!this.tokenSignal());
+  readonly isAuthenticated = computed(() => !!this.userSignal());
 
-  register(payload: RegisterRequest): Observable<AuthResponse> {
+  bootstrap(): Observable<void> {
+    return this.fetchCsrf().pipe(
+      tap(() => {
+        this.bootstrapDone = true;
+      }),
+      catchError(() => {
+        this.bootstrapDone = true;
+        return of(undefined);
+      }),
+      map(() => undefined),
+    );
+  }
+
+  restoreSession(): Observable<User | null> {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, payload)
-      .pipe(tap((response) => this.persistSession(response)));
+      .get<MeResponse>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
+      .pipe(
+        tap((response) => this.userSignal.set(response.user)),
+        map((response) => response.user),
+        catchError(() => {
+          this.userSignal.set(null);
+          return of(null);
+        }),
+      );
   }
 
-  login(payload: LoginRequest): Observable<AuthResponse> {
+  register(payload: RegisterRequest): Observable<User> {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, payload)
-      .pipe(tap((response) => this.persistSession(response)));
+      .post<SessionResponse>(`${environment.apiUrl}/auth/register`, payload, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((response) => this.applySession(response)),
+        map((response) => response.user),
+      );
   }
 
-  logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    this.tokenSignal.set(null);
-    this.userSignal.set(null);
-    void this.router.navigate(['/auth/login']);
+  login(payload: LoginRequest): Observable<User> {
+    return this.http
+      .post<SessionResponse>(`${environment.apiUrl}/auth/login`, payload, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((response) => this.applySession(response)),
+        map((response) => response.user),
+      );
   }
 
-  getToken(): string | null {
-    return this.tokenSignal();
+  logout(): Observable<void> {
+    return this.http
+      .post<{ message: string }>(`${environment.apiUrl}/auth/logout`, {}, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap(() => this.clearSession()),
+        catchError(() => {
+          this.clearSession();
+          return of(undefined);
+        }),
+        map(() => undefined),
+      );
   }
 
-  private persistSession(response: AuthResponse): void {
-    localStorage.setItem(TOKEN_KEY, response.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-    this.tokenSignal.set(response.token);
+  getCsrfToken(): string | null {
+    return this.csrfToken;
+  }
+
+  isBootstrapped(): boolean {
+    return this.bootstrapDone;
+  }
+
+  private fetchCsrf(): Observable<string> {
+    return this.http
+      .get<CsrfResponse>(`${environment.apiUrl}/auth/csrf`, { withCredentials: true })
+      .pipe(
+        tap((response) => {
+          this.csrfToken = response.csrfToken;
+        }),
+        map((response) => response.csrfToken),
+      );
+  }
+
+  private applySession(response: SessionResponse): User {
     this.userSignal.set(response.user);
+    this.csrfToken = response.csrfToken;
+    return response.user;
   }
 
-  private readToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-
-  private readUser(): User | null {
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw) as User;
-    } catch {
-      return null;
-    }
+  private clearSession(): void {
+    this.userSignal.set(null);
+    this.csrfToken = null;
+    void this.router.navigate(['/auth/login']);
   }
 }
