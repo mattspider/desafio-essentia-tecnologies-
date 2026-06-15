@@ -59,7 +59,8 @@
           <form [formGroup]="createForm" (ngSubmit)="createTask()" class="composer-form">
             <mat-form-field appearance="outline">
               <mat-label>Título</mat-label>
-              <input matInput formControlName="title" placeholder="Ex.: Revisar documentação" />
+              <input matInput formControlName="title" />
+              <mat-hint>Ex.: Revisar documentação</mat-hint>
               @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
                 <mat-error>Título é obrigatório</mat-error>
               }
@@ -67,12 +68,8 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Descrição</mat-label>
-              <textarea
-                matInput
-                rows="3"
-                formControlName="description"
-                placeholder="Detalhes opcionais..."
-              ></textarea>
+              <textarea matInput rows="3" formControlName="description"></textarea>
+              <mat-hint>Detalhes opcionais</mat-hint>
             </mat-form-field>
 
             <p class="composer-hint">
@@ -258,22 +255,14 @@
                       <mat-form-field appearance="outline" class="metadata-form__tags">
                         <mat-label>Tags</mat-label>
                         <mat-icon matPrefix>sell</mat-icon>
-                        <input
-                          matInput
-                          formControlName="tagsInput"
-                          placeholder="urgente, trabalho, pessoal"
-                        />
-                        <mat-hint>Separe as tags por vírgula</mat-hint>
+                        <input matInput formControlName="tagsInput" />
+                        <mat-hint>Separe por vírgula — ex.: urgente, trabalho, pessoal</mat-hint>
                       </mat-form-field>
 
                       <mat-form-field appearance="outline">
                         <mat-label>Notas</mat-label>
-                        <textarea
-                          matInput
-                          rows="3"
-                          formControlName="notes"
-                          placeholder="Observações adicionais sobre a tarefa..."
-                        ></textarea>
+                        <textarea matInput rows="3" formControlName="notes"></textarea>
+                        <mat-hint>Observações adicionais sobre a tarefa</mat-hint>
                       </mat-form-field>
 
                       @if (task.metadata?.tags?.length) {

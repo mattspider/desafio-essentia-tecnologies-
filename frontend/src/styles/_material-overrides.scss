@@ -101,14 +101,13 @@
     --mat-form-field-trailing-icon-color: var(--tx-text-muted);
   }
 
-  .mat-mdc-form-field .mdc-text-field__input::placeholder {
-    color: var(--tx-text-muted);
-    opacity: 1;
-  }
-
   .mat-mdc-form-field-hint,
   .mat-mdc-form-field .mat-mdc-form-field-hint {
     color: var(--tx-text-muted);
+  }
+
+  .mat-mdc-form-field-icon-prefix {
+    padding-right: 4px;
   }
 
   .mat-mdc-list-item .mat-mdc-list-item-title,
