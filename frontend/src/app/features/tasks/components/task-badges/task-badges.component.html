@@ -1,0 +1,13 @@
+<div class="task-badges">
+  <span class="badge badge--status" [class.badge--status-done]="completed()">
+    {{ statusLabel(completed()) }}
+  </span>
+  @if (showPriority() && priority(); as taskPriority) {
+    <span class="badge badge--priority" [attr.data-priority]="taskPriority">
+      {{ priorityLabel(taskPriority) }}
+    </span>
+  }
+  @for (tag of tags(); track tag) {
+    <span class="badge badge--tag">{{ tag }}</span>
+  }
+</div>

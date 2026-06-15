@@ -1,0 +1,68 @@
+<mat-expansion-panel
+  class="task-panel"
+  [class.task-panel--done]="task().completed"
+  (opened)="panelOpened.emit()"
+>
+  <mat-expansion-panel-header class="task-panel__header">
+    <mat-panel-title class="task-panel__title">
+      <mat-checkbox
+        class="task-panel__checkbox"
+        [checked]="task().completed"
+        (click)="$event.stopPropagation()"
+        (change)="toggleCompleted.emit()"
+        color="primary"
+      ></mat-checkbox>
+
+      <div class="task-panel__main">
+        <span class="task-panel__text" [class.task-panel__text--done]="task().completed">
+          {{ task().title }}
+        </span>
+        <span class="task-panel__desc">
+          @if (task().description) {
+            {{ task().description }}
+          } @else {
+            Sem descrição
+          }
+        </span>
+      </div>
+
+      <app-task-badges
+        class="task-panel__badges"
+        [completed]="task().completed"
+        [priority]="priority()"
+        [tags]="tags()"
+        [showPriority]="showPriorityBadge()"
+      />
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <div class="task-panel__body">
+    <div class="task-panel__toolbar">
+      <button mat-stroked-button type="button" (click)="edit.emit()">
+        <mat-icon>edit</mat-icon>
+        Editar
+      </button>
+      <button mat-stroked-button color="warn" type="button" (click)="delete.emit()">
+        <mat-icon>delete_outline</mat-icon>
+        Excluir
+      </button>
+    </div>
+
+    @if (editing() && editForm(); as form) {
+      <app-task-edit-form
+        [form]="form"
+        (save)="saveEdit.emit()"
+        (cancel)="cancelEdit.emit()"
+      />
+    }
+
+    @if (metadataForm(); as metaForm) {
+      <app-task-metadata-form
+        [task]="task()"
+        [form]="metaForm"
+        [priorities]="priorities()"
+        (save)="saveMetadata.emit()"
+      />
+    }
+  </div>
+</mat-expansion-panel>

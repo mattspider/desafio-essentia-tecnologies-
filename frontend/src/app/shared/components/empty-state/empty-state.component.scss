@@ -1,0 +1,29 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border-radius: var(--tx-radius-md);
+  border: 1px dashed var(--tx-border-strong);
+  background: var(--tx-surface);
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: var(--tx-text-subtle);
+  }
+
+  h3 {
+    margin: 0.75rem 0 0.25rem;
+    font-size: 1.125rem;
+    color: var(--tx-text);
+  }
+
+  p {
+    margin: 0.75rem 0 0;
+    color: var(--tx-text-muted);
+  }
+}

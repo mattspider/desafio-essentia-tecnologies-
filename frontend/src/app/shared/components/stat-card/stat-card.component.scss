@@ -1,0 +1,32 @@
+.stat-card {
+  padding: 1rem 1.125rem;
+  border-radius: var(--tx-radius-md);
+  border: 1px solid var(--tx-border);
+  background: var(--tx-surface);
+  box-shadow: var(--tx-shadow-sm);
+}
+
+.stat-card__label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--tx-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.stat-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.stat-card--total .stat-card__value {
+  color: var(--tx-primary);
+}
+
+.stat-card--pending .stat-card__value {
+  color: var(--tx-warning);
+}
+
+.stat-card--done .stat-card__value {
+  color: var(--tx-success);
+}

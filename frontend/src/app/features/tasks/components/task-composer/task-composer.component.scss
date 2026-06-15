@@ -1,0 +1,49 @@
+.composer-card {
+  position: sticky;
+  top: calc(var(--tx-header-height) + 1rem);
+  background: var(--tx-surface) !important;
+}
+
+.composer-card mat-card-title {
+  font-weight: 700 !important;
+  color: var(--tx-text) !important;
+}
+
+.composer-card mat-card-subtitle {
+  color: var(--tx-text-muted) !important;
+}
+
+.composer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.composer-hint {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--tx-text-muted);
+
+  strong {
+    color: var(--tx-text);
+    font-weight: 600;
+  }
+}
+
+.composer-form button[type='submit'] {
+  min-height: 48px;
+  border-radius: var(--tx-radius-sm) !important;
+  font-weight: 600;
+}
+
+.composer-form button mat-spinner {
+  margin: 0 auto;
+}
+
+@media (max-width: 899px) {
+  .composer-card {
+    position: static;
+  }
+}

@@ -1,0 +1,14 @@
+<form [formGroup]="form()" (ngSubmit)="save.emit()" class="edit-form">
+  <mat-form-field appearance="outline">
+    <mat-label>Título</mat-label>
+    <input matInput formControlName="title" />
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Descrição</mat-label>
+    <textarea matInput rows="2" formControlName="description"></textarea>
+  </mat-form-field>
+  <div class="inline-actions">
+    <button mat-flat-button color="primary" type="submit">Salvar</button>
+    <button mat-button type="button" (click)="cancel.emit()">Cancelar</button>
+  </div>
+</form>

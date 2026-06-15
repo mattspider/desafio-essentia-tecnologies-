@@ -1,0 +1,29 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <div class="auth-brand__logo">
+      <mat-icon>task_alt</mat-icon>
+      TechX To-Do
+    </div>
+
+    <div>
+      <h1 class="auth-brand__headline">{{ brand().headline }}</h1>
+      <p class="auth-brand__text">{{ brand().description }}</p>
+    </div>
+
+    <ul class="auth-brand__features">
+      @for (feature of brand().features; track feature.label) {
+        <li>
+          <mat-icon>{{ feature.icon }}</mat-icon>
+          {{ feature.label }}
+        </li>
+      }
+    </ul>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__toolbar">
+      <app-theme-toggle />
+    </div>
+    <ng-content />
+  </main>
+</div>

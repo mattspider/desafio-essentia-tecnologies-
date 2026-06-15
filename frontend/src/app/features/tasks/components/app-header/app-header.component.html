@@ -1,0 +1,30 @@
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="brand">
+      <span class="brand__icon">
+        <mat-icon>task_alt</mat-icon>
+      </span>
+      <div>
+        <span class="brand__title">TechX To-Do</span>
+        <span class="brand__subtitle">Suas tarefas do dia</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <app-theme-toggle />
+      @if (user(); as currentUser) {
+        <app-user-chip [name]="currentUser.name" />
+      }
+      <button
+        mat-stroked-button
+        type="button"
+        class="logout-btn"
+        (click)="logout.emit()"
+        aria-label="Sair"
+      >
+        <mat-icon>logout</mat-icon>
+        Sair
+      </button>
+    </div>
+  </div>
+</header>

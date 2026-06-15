@@ -1,0 +1,12 @@
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 899px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}

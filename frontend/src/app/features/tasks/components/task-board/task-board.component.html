@@ -1,0 +1,45 @@
+<section class="task-board">
+  <div class="task-board__header">
+    <div>
+      <h2>Minhas tarefas</h2>
+      <p>{{ pendingCount() }} pendente(s) · {{ completedCount() }} concluída(s)</p>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="refresh.emit()"
+      aria-label="Atualizar lista"
+      matTooltip="Atualizar lista"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Carregando tarefas..." />
+  } @else if (tasks().length === 0) {
+    <app-empty-state
+      title="Nenhuma tarefa ainda"
+      description="Crie sua primeira tarefa no formulário ao lado."
+    />
+  } @else {
+    <mat-accordion class="task-accordion" multi>
+      @for (task of tasks(); track task.id) {
+        <app-task-panel
+          [task]="task"
+          [editing]="isEditing(task.id)"
+          [editForm]="editForm()"
+          [metadataForm]="metadataFormFor(task.id)"
+          [priorities]="priorities()"
+          (toggleCompleted)="toggleCompleted.emit(task)"
+          (edit)="edit.emit(task)"
+          (delete)="delete.emit(task)"
+          (panelOpened)="panelOpened.emit(task)"
+          (saveEdit)="saveEdit.emit(task.id)"
+          (cancelEdit)="cancelEdit.emit()"
+          (saveMetadata)="saveMetadata.emit(task)"
+        />
+      }
+    </mat-accordion>
+  }
+</section>
