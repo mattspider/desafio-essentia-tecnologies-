@@ -20,6 +20,14 @@
   --mat-sys-on-primary: #0f172a;
   --mat-sys-primary-container: #312e81;
   --mat-sys-on-primary-container: #e0e7ff;
+
+  --mat-sys-on-surface: #e2e8f0;
+  --mat-sys-on-surface-variant: #94a3b8;
+  --mat-sys-surface: #151f32;
+
+  --mat-list-list-item-label-text-color: var(--tx-text);
+  --mat-list-list-item-supporting-text-color: var(--tx-text-muted);
+  --mat-list-list-item-leading-icon-color: var(--tx-text-muted);
 }
 
 .mat-mdc-unelevated-button.mat-primary,
@@ -91,6 +99,55 @@
 [data-theme='dark'] {
   .mat-expansion-panel-header .mat-expansion-indicator::after {
     border-color: var(--tx-text);
+  }
+
+  .mat-mdc-form-field {
+    --mat-form-field-subscript-text-color: var(--tx-text-muted);
+    --mat-form-field-leading-icon-color: var(--tx-text-muted);
+    --mat-form-field-trailing-icon-color: var(--tx-text-muted);
+    --mdc-outlined-text-field-input-text-color: var(--tx-text);
+    --mdc-outlined-text-field-caret-color: var(--tx-primary);
+    --mdc-outlined-text-field-label-text-color: var(--tx-text-muted);
+    --mdc-outlined-text-field-focus-label-text-color: var(--tx-primary);
+    --mdc-outlined-text-field-hover-label-text-color: var(--tx-text);
+  }
+
+  .mat-mdc-form-field .mdc-text-field__input,
+  .mat-mdc-form-field textarea.mdc-text-field__input {
+    color: var(--tx-text);
+    -webkit-text-fill-color: var(--tx-text);
+  }
+
+  .mat-mdc-form-field-hint,
+  .mat-mdc-form-field .mat-mdc-form-field-hint {
+    color: var(--tx-text-muted);
+  }
+
+  .mat-mdc-form-field-icon-prefix {
+    padding-right: 4px;
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-title,
+  .mat-mdc-list-item .mdc-list-item__primary-text {
+    color: var(--tx-text) !important;
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-line,
+  .mat-mdc-list-item .mdc-list-item__secondary-text {
+    color: var(--tx-text-muted) !important;
+  }
+
+  .mat-mdc-list-item .mat-mdc-list-item-icon,
+  .mat-mdc-list-item [matListItemIcon] {
+    color: var(--tx-text-muted) !important;
+  }
+
+  .mat-mdc-outlined-button.mat-primary {
+    --mdc-outlined-button-label-text-color: var(--tx-primary);
+  }
+
+  .mat-mdc-button.mat-primary {
+    --mdc-text-button-label-text-color: var(--tx-primary);
   }
 }
 
