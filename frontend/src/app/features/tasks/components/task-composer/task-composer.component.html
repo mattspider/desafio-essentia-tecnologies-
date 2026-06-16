@@ -5,12 +5,12 @@
       <mat-card-subtitle>Adicione o que precisa fazer hoje</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="submit()" class="composer-form">
+      <form [formGroup]="form" class="composer-form" (keydown.enter)="$event.preventDefault(); submit()">
         <mat-form-field appearance="outline">
           <mat-label>Título</mat-label>
           <input matInput formControlName="title" />
           <mat-hint>Ex.: Revisar documentação</mat-hint>
-          @if (form.controls.title.touched && form.controls.title.invalid) {
+          @if (showValidationErrors && form.controls.title.invalid) {
             <mat-error>Título é obrigatório</mat-error>
           }
         </mat-form-field>
@@ -26,7 +26,7 @@
           <strong>notas</strong>.
         </p>
 
-        <button mat-flat-button color="primary" type="submit" [disabled]="creating()">
+        <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="creating()">
           @if (creating()) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {
