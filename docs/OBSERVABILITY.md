@@ -1,7 +1,5 @@
 # Observabilidade — TechX To-Do List
 
-Stack mínima de métricas **RED** (Rate, Errors, Duration) com Prometheus e Grafana no Docker Compose local. A API também expõe `/metrics` em produção (Railway) para integração futura com Grafana Cloud.
-
 ## Arquitetura
 
 ```
@@ -61,11 +59,6 @@ O endpoint `GET /metrics` está **público** em produção:
 ```
 https://desafio-essentia-tecnologies-production.up.railway.app/metrics
 ```
-
-Isso permite configurar um **Grafana Cloud** (ou Prometheus externo) para scrapear a API em produção. As métricas expõem apenas dados HTTP e de processo — sem informações sensíveis de usuários.
-
-> **Nota:** Em um ambiente corporativo, considere proteger `/metrics` com autenticação ou rede privada. Para portfólio, o endpoint público é aceitável.
-
 ## Arquivos de configuração
 
 ```
