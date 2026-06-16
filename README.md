@@ -11,6 +11,8 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 | **Repositório** | [github.com/mattspider/desafio-essentia-tecnologies-](https://github.com/mattspider/desafio-essentia-tecnologies-) |
 | **API (produção)** | [desafio-essentia-tecnologies-production.up.railway.app/api](https://desafio-essentia-tecnologies-production.up.railway.app/api) |
 | **Health check** | […/api/health](https://desafio-essentia-tecnologies-production.up.railway.app/api/health) |
+| **API Docs (Swagger)** | […/api/docs](https://desafio-essentia-tecnologies-production.up.railway.app/api/docs) |
+| **Métricas** | […/metrics](https://desafio-essentia-tecnologies-production.up.railway.app/metrics) |
 | **Frontend** | [desafio-essentia-tecnologies-fronte.vercel.app](https://desafio-essentia-tecnologies-fronte.vercel.app/) |
 
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)
@@ -30,6 +32,8 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 - [Quick Start](#quick-start)
 - [Entrega do desafio](#entrega-do-desafio)
 - [API](#api)
+- [API Docs](#api-docs)
+- [Observabilidade](#observabilidade)
 - [Banco de dados](#banco-de-dados)
 - [Testes](#testes)
 - [CI/CD](#cicd)
@@ -77,6 +81,8 @@ Cadastre-se, faça login e gerencie tarefas com prioridade, tags, notas e histó
 - Testes unitários backend (Vitest) e frontend (Karma)
 - GitHub Actions — lint, testes e build em cada PR
 - Collection Postman (local + produção)
+- **Swagger UI** — documentação OpenAPI interativa em `/api/docs`
+- **Prometheus + Grafana** — métricas RED e dashboard local via Docker Compose
 
 ---
 
@@ -254,6 +260,47 @@ Alternativa para Postman/API clients: `Authorization: Bearer <token>` (fallback)
 
 ---
 
+## API Docs
+
+Documentação OpenAPI 3 interativa via **Swagger UI**.
+
+| Ambiente | URL |
+|----------|-----|
+| Local | http://localhost:3000/api/docs |
+| Produção | https://desafio-essentia-tecnologies-production.up.railway.app/api/docs |
+| Spec (YAML) | `/api/docs/openapi.yaml` |
+
+A spec está em [`backend/openapi.yaml`](backend/openapi.yaml) e documenta autenticação por cookie HttpOnly + CSRF e fallback Bearer para clientes API.
+
+**Fluxo no Swagger UI:**
+
+1. Execute `GET /auth/csrf` ou `POST /auth/login`
+2. Cookies de sessão são definidos automaticamente no browser
+3. Use o `csrfToken` da resposta no header `X-CSRF-Token` para mutações (`POST`, `PUT`, `PATCH`, `DELETE`)
+
+---
+
+## Observabilidade
+
+Métricas **Prometheus** na API (`GET /metrics`) com dashboard **Grafana** provisionado no Docker Compose local.
+
+| Ambiente | Métricas | Grafana |
+|----------|----------|---------|
+| Local | http://localhost:3000/metrics | http://localhost:3001 (`admin` / `admin`) |
+| Produção | https://desafio-essentia-tecnologies-production.up.railway.app/metrics | Grafana Cloud (futuro) |
+
+**Métricas expostas:**
+
+- `http_requests_total` — contador por método, rota e status
+- `http_request_duration_seconds` — histograma de latência
+- Métricas de processo Node (CPU, memória, event loop)
+
+**Dashboard local (4 painéis):** request rate, error rate 5xx, latência p95, memória RSS.
+
+Detalhes: [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md)
+
+---
+
 ## Banco de dados
 
 ### MySQL (Prisma)
@@ -394,6 +441,8 @@ Fluxo:
 | MySQL | `mysql:8` | 3306 | `techx` / `techx123` / `techx_todo` |
 | MongoDB | `mongo:7` | 27017 | sem auth |
 | Backend | `backend/Dockerfile` | 3000 | migrate + API |
+| Prometheus | `prom/prometheus` | 9090 | — |
+| Grafana | `grafana/grafana` | 3001 | `admin` / `admin` |
 
 ```bash
 docker compose up -d --build      # stack completa
@@ -464,9 +513,11 @@ HTTP → Controller → Service → Repository → MySQL / MongoDB
 .
 ├── .github/workflows/     # CI
 ├── backend/               # API Express + TypeScript
+│   ├── openapi.yaml         # Spec OpenAPI 3
 │   ├── prisma/            # Schema e migrations
-│   ├── src/               # Camadas + infra
+│   ├── src/               # Camadas + infra + metrics
 │   └── tests/             # Vitest
+├── observability/         # Prometheus + Grafana provisioning
 ├── frontend/              # Angular 19 + Material
 │   ├── src/app/
 │   │   ├── core/          # Auth, guards, interceptor, services, theme
@@ -487,6 +538,7 @@ HTTP → Controller → Service → Repository → MySQL / MongoDB
 | Documento | Conteúdo |
 |-----------|----------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | SOLID, patterns, fluxo de requisição, frontend componentizado |
+| [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) | Prometheus, Grafana, métricas e Swagger |
 | [frontend/README.md](frontend/README.md) | Scripts, env e estrutura Angular |
 
 ---
