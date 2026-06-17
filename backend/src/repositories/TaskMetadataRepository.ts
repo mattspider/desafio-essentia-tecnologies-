@@ -38,15 +38,17 @@ export class TaskMetadataRepository implements ITaskMetadataRepository {
       return this.toDomain(document.toObject());
     }
 
-    if (data.tags !== undefined) {
-      document.tags = data.tags;
-    }
+    const preserveExistingContent = this.shouldPreserveExistingContent(document, data);
 
     if (data.priority !== undefined) {
       document.priority = data.priority;
     }
 
-    if (data.notes !== undefined) {
+    if (data.tags !== undefined && !preserveExistingContent) {
+      document.tags = data.tags;
+    }
+
+    if (data.notes !== undefined && !preserveExistingContent) {
       document.notes = data.notes;
     }
 
@@ -61,6 +63,26 @@ export class TaskMetadataRepository implements ITaskMetadataRepository {
 
   async deleteByTaskId(taskId: number): Promise<void> {
     await TaskMetadataModel.deleteOne({ taskId });
+  }
+
+  private shouldPreserveExistingContent(
+    document: { tags: string[]; notes: string },
+    data: UpsertTaskMetadataData,
+  ): boolean {
+    if (data.tags === undefined && data.notes === undefined) {
+      return false;
+    }
+
+    const incomingTagsEmpty = data.tags === undefined || data.tags.length === 0;
+    const incomingNotesEmpty = data.notes === undefined || data.notes === '';
+    const existingHasContent = document.tags.length > 0 || document.notes !== '';
+
+    return (
+      incomingTagsEmpty &&
+      incomingNotesEmpty &&
+      existingHasContent &&
+      data.priority !== undefined
+    );
   }
 
   private toDomain(document: {

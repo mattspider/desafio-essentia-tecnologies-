@@ -1,7 +1,12 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CreateTaskRequest, TaskMetadata, TaskPriority } from '../../../core/models/task.model';
+import {
+  CreateTaskRequest,
+  TaskMetadata,
+  TaskPriority,
+  UpsertTaskMetadataRequest,
+} from '../../../core/models/task.model';
 import { TaskService } from '../../../core/services/task.service';
 import { getApiErrorMessage } from '../../../core/utils/api-error.util';
 import { TaskViewModel } from '../models/task-view.model';
@@ -33,7 +38,9 @@ export class TaskFacadeService {
     description: [''],
   });
 
-  readonly metadataForms = new Map<number, FormGroup>();
+  readonly metadataForms = signal(new Map<number, FormGroup>());
+
+  private readonly metadataLoadSeq = new Map<number, number>();
 
   loadTasks(): void {
     this.loading.set(true);
@@ -47,7 +54,8 @@ export class TaskFacadeService {
             metadataFetched: false,
           })),
         );
-        this.metadataForms.clear();
+        this.metadataForms.set(new Map());
+        this.metadataLoadSeq.clear();
         this.loading.set(false);
       },
       error: (error: unknown) => {
@@ -149,7 +157,12 @@ export class TaskFacadeService {
     this.taskService.delete(task.id).subscribe({
       next: () => {
         this.tasks.update((items) => items.filter((item) => item.id !== task.id));
-        this.metadataForms.delete(task.id);
+        this.metadataForms.update((forms) => {
+          const next = new Map(forms);
+          next.delete(task.id);
+          return next;
+        });
+        this.metadataLoadSeq.delete(task.id);
         this.snackBar.open('Tarefa removida.', 'Fechar', { duration: 2500 });
       },
       error: (error: unknown) => {
@@ -161,62 +174,99 @@ export class TaskFacadeService {
   }
 
   onPanelOpened(task: TaskViewModel): void {
-    this.syncMetadataForm(task.id, this.defaultMetadata(task));
-
-    if (task.metadataFetched || task.metadataLoading) {
+    if (task.metadataFetched && task.metadata) {
+      this.syncMetadataForm(task.id, task.metadata);
+      this.notifyTasksChanged();
       return;
     }
 
+    if (task.metadataLoading) {
+      return;
+    }
+
+    if (task.metadataFetched) {
+      return;
+    }
+
+    this.syncMetadataForm(task.id, this.defaultMetadata(task));
+    this.notifyTasksChanged();
+
     task.metadataLoading = true;
     task.metadataError = null;
+    const loadSeq = this.bumpMetadataLoadSeq(task.id);
 
     this.taskService.getMetadata(task.id).subscribe({
       next: (metadata) => {
+        if (this.metadataLoadSeq.get(task.id) !== loadSeq) {
+          return;
+        }
+
         task.metadata = metadata;
         task.metadataFetched = true;
         task.metadataLoading = false;
         this.syncMetadataForm(task.id, metadata);
-        this.tasks.update((items) => [...items]);
+        this.notifyTasksChanged();
       },
       error: (error: unknown) => {
+        if (this.metadataLoadSeq.get(task.id) !== loadSeq) {
+          return;
+        }
+
         task.metadataLoading = false;
         task.metadataFetched = true;
         task.metadataError = getApiErrorMessage(error, 'Metadados indisponíveis.');
         this.syncMetadataForm(task.id, this.defaultMetadata(task));
-        this.tasks.update((items) => [...items]);
+        this.notifyTasksChanged();
       },
     });
   }
 
   saveMetadata(task: TaskViewModel): void {
-    const form = this.metadataForms.get(task.id);
+    const form = this.metadataForms().get(task.id);
     if (!form || form.invalid) {
       form?.markAllAsTouched();
       return;
     }
 
+    const payload = this.buildMetadataPayload(task, form);
+    const saveSeq = this.bumpMetadataLoadSeq(task.id);
+    task.metadataLoading = false;
+
+    this.taskService.upsertMetadata(task.id, payload).subscribe({
+      next: (metadata) => {
+        if (this.metadataLoadSeq.get(task.id) !== saveSeq) {
+          return;
+        }
+
+        task.metadata = metadata;
+        task.metadataFetched = true;
+        this.syncMetadataForm(task.id, metadata);
+        this.notifyTasksChanged();
+        this.snackBar.open('Metadados salvos.', 'Fechar', { duration: 2500 });
+      },
+      error: (error: unknown) => {
+        this.snackBar.open(getApiErrorMessage(error, 'Erro ao salvar metadados.'), 'Fechar', {
+          duration: 4000,
+        });
+      },
+    });
+  }
+
+  private buildMetadataPayload(task: TaskViewModel, form: FormGroup): UpsertTaskMetadataRequest {
     const { priority, notes, tagsInput } = form.getRawValue() as {
       priority: TaskPriority;
       notes: string;
       tagsInput: string;
     };
 
-    this.taskService
-      .upsertMetadata(task.id, { priority, notes, tags: parseTagsInput(tagsInput) })
-      .subscribe({
-        next: (metadata) => {
-          task.metadata = metadata;
-          task.metadataFetched = true;
-          this.syncMetadataForm(task.id, metadata);
-          this.tasks.update((items) => [...items]);
-          this.snackBar.open('Metadados salvos.', 'Fechar', { duration: 2500 });
-        },
-        error: (error: unknown) => {
-          this.snackBar.open(getApiErrorMessage(error, 'Erro ao salvar metadados.'), 'Fechar', {
-            duration: 4000,
-          });
-        },
-      });
+    const parsedTags = parseTagsInput(tagsInput);
+    const loaded = task.metadata;
+
+    return {
+      priority,
+      notes: notes.trim() || loaded?.notes || '',
+      tags: parsedTags.length > 0 ? parsedTags : (loaded?.tags ?? []),
+    };
   }
 
   private defaultMetadata(task: TaskViewModel): TaskMetadata {
@@ -230,25 +280,46 @@ export class TaskFacadeService {
     };
   }
 
+  private bumpMetadataLoadSeq(taskId: number): number {
+    const next = (this.metadataLoadSeq.get(taskId) ?? 0) + 1;
+    this.metadataLoadSeq.set(taskId, next);
+    return next;
+  }
+
+  private notifyTasksChanged(): void {
+    this.tasks.update((items) => [...items]);
+  }
+
   private syncMetadataForm(taskId: number, metadata: TaskMetadata): void {
-    const existing = this.metadataForms.get(taskId);
+    const values = {
+      priority: metadata.priority,
+      notes: metadata.notes ?? '',
+      tagsInput: (metadata.tags ?? []).join(', '),
+    };
+
+    const existing = this.metadataForms().get(taskId);
 
     if (existing) {
-      existing.patchValue({
-        priority: metadata.priority,
-        notes: metadata.notes,
-        tagsInput: metadata.tags.join(', '),
-      });
+      existing.setValue(values, { emitEvent: true });
+      this.publishMetadataForms();
       return;
     }
 
-    this.metadataForms.set(
-      taskId,
-      this.fb.nonNullable.group({
-        priority: [metadata.priority, Validators.required],
-        notes: [metadata.notes],
-        tagsInput: [metadata.tags.join(', ')],
-      }),
-    );
+    this.metadataForms.update((forms) => {
+      const next = new Map(forms);
+      next.set(
+        taskId,
+        this.fb.nonNullable.group({
+          priority: [values.priority, Validators.required],
+          notes: [values.notes],
+          tagsInput: [values.tagsInput],
+        }),
+      );
+      return next;
+    });
+  }
+
+  private publishMetadataForms(): void {
+    this.metadataForms.update((forms) => new Map(forms));
   }
 }
