@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { TaskService } from '../../../core/services/task.service';
 import { Task } from '../../../core/models/task.model';
 import { TaskFacadeService } from './task-facade.service';
+import { TaskViewModel } from '../models/task-view.model';
 
 const sampleTask: Task = {
   id: 1,
@@ -13,6 +14,15 @@ const sampleTask: Task = {
   userId: 10,
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',
+};
+
+const loadedMetadata = {
+  taskId: 1,
+  userId: 10,
+  tags: ['api', 'teste'],
+  priority: 'high' as const,
+  notes: 'nota',
+  history: [],
 };
 
 describe('TaskFacadeService', () => {
@@ -105,26 +115,81 @@ describe('TaskFacadeService', () => {
     expect(facade.editingTaskId()).toBeNull();
   });
 
-  it('should create metadata form when panel opens', () => {
-    const task = { ...sampleTask, metadataFetched: false };
-    taskService.getMetadata.and.returnValue(
-      of({
-        taskId: 1,
-        userId: 10,
-        tags: ['api'],
-        priority: 'high',
-        notes: 'nota',
-        history: [],
-      }),
-    );
+  it('should patch metadata form when getMetadata resolves', () => {
+    const task: TaskViewModel = { ...sampleTask, metadataFetched: false };
+    taskService.getMetadata.and.returnValue(of(loadedMetadata));
 
     facade.onPanelOpened(task);
 
     expect(taskService.getMetadata).toHaveBeenCalledWith(1);
-    expect(facade.metadataForms.get(1)?.getRawValue()).toEqual({
+    expect(facade.metadataForms().get(1)?.getRawValue()).toEqual({
       priority: 'high',
       notes: 'nota',
-      tagsInput: 'api',
+      tagsInput: 'api, teste',
+    });
+    expect(task.metadata).toEqual(loadedMetadata);
+  });
+
+  it('should not reset metadata form to defaults when panel reopens with loaded metadata', () => {
+    const task = {
+      ...sampleTask,
+      metadataFetched: true,
+      metadata: loadedMetadata,
+    };
+
+    facade.onPanelOpened(task);
+
+    expect(taskService.getMetadata).not.toHaveBeenCalled();
+    expect(facade.metadataForms().get(1)?.getRawValue()).toEqual({
+      priority: 'high',
+      notes: 'nota',
+      tagsInput: 'api, teste',
+    });
+  });
+
+  it('should ignore stale getMetadata responses after a newer save started', () => {
+    const task: TaskViewModel = { ...sampleTask, metadataFetched: false };
+    const metadata$ = new Subject<typeof loadedMetadata>();
+    taskService.getMetadata.and.returnValue(metadata$.asObservable());
+    taskService.upsertMetadata.and.returnValue(
+      of({
+        ...loadedMetadata,
+        priority: 'low',
+      }),
+    );
+
+    facade.onPanelOpened(task);
+    facade.metadataForms().get(1)?.patchValue({ priority: 'low', notes: '', tagsInput: '' });
+    facade.saveMetadata(task);
+    metadata$.next(loadedMetadata);
+
+    expect(task.metadata?.priority).toBe('low');
+    expect(task.metadata?.tags).toEqual(['api', 'teste']);
+    expect(task.metadata?.notes).toBe('nota');
+    expect(facade.metadataForms().get(1)?.getRawValue()).toEqual({
+      priority: 'low',
+      notes: 'nota',
+      tagsInput: 'api, teste',
+    });
+  });
+
+  it('should merge loaded metadata into save payload when form fields are empty', () => {
+    const task = {
+      ...sampleTask,
+      metadataFetched: true,
+      metadata: loadedMetadata,
+    };
+    taskService.upsertMetadata.and.returnValue(of(loadedMetadata));
+
+    facade.onPanelOpened(task);
+    facade.metadataForms().get(1)?.patchValue({ priority: 'high', notes: '', tagsInput: '' });
+
+    facade.saveMetadata(task);
+
+    expect(taskService.upsertMetadata).toHaveBeenCalledWith(1, {
+      priority: 'high',
+      notes: 'nota',
+      tags: ['api', 'teste'],
     });
   });
 });

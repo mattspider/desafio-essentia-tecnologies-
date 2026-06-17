@@ -17,7 +17,7 @@
       [completedCount]="facade.completedCount()"
       [editingTaskId]="facade.editingTaskId()"
       [editForm]="facade.editForm"
-      [metadataForms]="facade.metadataForms"
+      [metadataForms]="facade.metadataForms()"
       [priorities]="facade.priorities"
       (refresh)="facade.loadTasks()"
       (toggleCompleted)="toggleCompleted($event)"
